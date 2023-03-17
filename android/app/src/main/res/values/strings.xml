@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Stolové osvetlenie</string>
+    <string name="heading">Stolné svietidlo</string>
+    <string name="settings">Nastavenia</string>
+    <string name="light_switch_on">Zapnuté</string>
+    <string name="light_switch_off">Vypnuté</string>
+    <string name="setting_brightness">Maximálny jas</string>
+    <string name="brightness_placeholder">100</string>
+    <string name="brightness_unit">%</string>
+    <string name="setting_color_temperature">Farebná teplota</string>
+    <string name="color_temp_placeholder">6500</string>
+    <string name="color_temperature_unit">K</string>
+    <string name="setting_illuminance_threshold">Prah osvetlenia na zapnutie</string>
+    <string name="illuminance_placeholder">10</string>
+    <string name="illuminance_unit">Lux</string>
+    <string name="apply_settings">Použiť</string>
+</resources>

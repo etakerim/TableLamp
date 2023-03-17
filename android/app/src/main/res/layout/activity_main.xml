@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    tools:layout_editor_absoluteX="0dp"
+    tools:layout_editor_absoluteY="112dp">
+
+    <ToggleButton
+        android:id="@+id/light_switch"
+        android:layout_width="250dp"
+        android:layout_height="74dp"
+        android:layout_marginTop="44dp"
+        android:textOff="@string/light_switch_off"
+        android:textOn="@string/light_switch_on"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/brightness"
+        android:layout_width="164dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="92dp"
+        android:ems="10"
+        android:hint="@string/brightness_placeholder"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.672"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/light_switch" />
+
+    <EditText
+        android:id="@+id/color_temperature"
+        android:layout_width="165dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:hint="@string/color_temp_placeholder"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.674"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/brightness" />
+
+    <EditText
+        android:id="@+id/lux_threshold"
+        android:layout_width="165dp"
+        android:layout_height="67dp"
+        android:layout_marginTop="28dp"
+        android:ems="10"
+        android:hint="@string/illuminance_placeholder"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.674"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/color_temperature" />
+
+    <TextView
+        android:id="@+id/setting_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/settings"
+        android:textColor="#1A237E"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/brightness"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/light_switch"
+        app:layout_constraintVertical_bias="0.614" />
+
+    <Button
+        android:id="@+id/apply_btn"
+        android:layout_width="214dp"
+        android:layout_height="63dp"
+        android:text="@string/apply_settings"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/lux_threshold"
+        app:layout_constraintVertical_bias="0.283" />
+
+    <TextView
+        android:id="@+id/label_brightness"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="9dp"
+        android:text="@string/brightness_unit"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/brightness"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.205"
+        app:layout_constraintStart_toEndOf="@+id/brightness"
+        app:layout_constraintTop_toTopOf="@+id/brightness" />
+
+    <TextView
+        android:id="@+id/label_color_temp"
+        android:layout_width="19dp"
+        android:layout_height="23dp"
+        android:text="@string/color_temperature_unit"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/label_threshold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.327"
+        app:layout_constraintStart_toEndOf="@+id/color_temperature"
+        app:layout_constraintTop_toBottomOf="@+id/label_brightness" />
+
+    <TextView
+        android:id="@+id/label_threshold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/illuminance_unit"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/lux_threshold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.416"
+        app:layout_constraintStart_toEndOf="@+id/lux_threshold"
+        app:layout_constraintTop_toTopOf="@+id/lux_threshold" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/setting_brightness"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/brightness"
+        app:layout_constraintEnd_toStartOf="@+id/brightness"
+        app:layout_constraintHorizontal_bias="0.467"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/brightness"
+        app:layout_constraintVertical_bias="0.433" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/setting_color_temperature"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/textView4"
+        app:layout_constraintEnd_toStartOf="@+id/color_temperature"
+        app:layout_constraintHorizontal_bias="0.547"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="112dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="28dp"
+        android:text="@string/setting_illuminance_threshold"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/lux_threshold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/lux_threshold"
+        app:layout_constraintVertical_bias="0.533" />
+</androidx.constraintlayout.widget.ConstraintLayout>
