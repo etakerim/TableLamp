@@ -72,6 +72,7 @@ void led_output(uint16_t temperature, uint8_t brightness)
     led_set_color(color);
 }
 
+
 float clamp(float value, float min, float max)
 {
     if (value < min)

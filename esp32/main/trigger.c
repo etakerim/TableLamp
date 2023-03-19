@@ -11,9 +11,18 @@ void pir_sensor_config(gpio_isr_t isr_handler)
         .pull_up_en = 0
     };
     ESP_ERROR_CHECK(gpio_config(&io_conf));
-
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(PIR_SENSOR, isr_handler, NULL));
+    pir_add_isr(isr_handler);
+}
+
+void pir_add_isr(gpio_isr_t isr_handler)
+{
+    gpio_isr_handler_add(PIR_SENSOR, isr_handler, NULL);
+}
+
+void pir_remove_isr(void)
+{
+    gpio_isr_handler_remove(PIR_SENSOR);
 }
 
 
@@ -25,30 +34,36 @@ void timer_setup(gptimer_handle_t *gptimer, uint64_t seconds, gptimer_alarm_cb_t
         .resolution_hz = 1500               // Maximum prescaler: 65536 (res = 1200 Hz)
     };
     gptimer_alarm_config_t timer_alarm = {
-        .alarm_count=(1500 * seconds),
+        .alarm_count = (1500 * seconds),
     };
+
+    gptimer_new_timer(&timer_config, gptimer);
+    gptimer_set_alarm_action(*gptimer, &timer_alarm);
+
     gptimer_event_callbacks_t cbs = {
         .on_alarm = action, 
     };
-
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, gptimer));
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(*gptimer, &cbs, NULL));
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(*gptimer, &timer_alarm));
-    ESP_ERROR_CHECK(gptimer_enable(*gptimer));
+    gptimer_register_event_callbacks(*gptimer, &cbs, NULL);
+    
+    gptimer_enable(*gptimer);
 }
 
-void timer_start(gptimer_handle_t gptimer)
-{
-    gptimer_set_raw_count(gptimer, 0);
-    gptimer_start(gptimer);
-}
 
-void timer_restart(gptimer_handle_t gptimer)
+void movement_detection(
+    bool allow, gptimer_handle_t timer, 
+    gptimer_alarm_cb_t timer_action, gpio_isr_t gpio_action
+) 
 {
-    gptimer_set_raw_count(gptimer, 0);
-}
-
-void timer_stop(gptimer_handle_t gptimer)
-{
-    gptimer_stop(gptimer);
+    if (allow) {
+        pir_add_isr(gpio_action);
+        gptimer_event_callbacks_t cbs = {
+            .on_alarm = timer_action, 
+        };
+        gptimer_register_event_callbacks(timer, &cbs, NULL);
+        gptimer_enable(timer);
+    } else {
+        pir_remove_isr();
+        gptimer_stop(timer);
+        gptimer_disable(timer);
+    }
 }

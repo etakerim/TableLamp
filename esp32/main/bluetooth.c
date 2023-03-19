@@ -31,16 +31,27 @@ static char *next_token(char *str)
 }
 
 
-bool parse_commands(Light *light, char *stream) 
+CommandAction parse_commands(Light *light, char *stream) 
 {
     char *pos;
     uint16_t value = 0;
-    bool change = false;
+    CommandAction cmd = BLCMD_NO_ACTION;
 
-    pos = next_token(strstr(stream, "STATUS "));
-    if (pos != NULL && isdigit((int)*pos)) {
+    pos = next_token(strstr(stream, "REQ"));
+    if (pos != NULL) {
+        cmd = BLCMD_REQUEST;
+    }
+
+    pos = next_token(strstr(stream, "SWITCH"));
+    if (pos != NULL) {
         light->status = !light->status;
-        change = true;
+        cmd = BLCMD_DATA_CHANGE;
+    }
+
+    pos = next_token(strstr(stream, "DETECT"));
+    if (pos != NULL) {
+        light->movement = !light->movement;
+        cmd = BLCMD_DETECTION;
     }
 
     pos = next_token(strstr(stream, "LUX "));
@@ -48,7 +59,7 @@ bool parse_commands(Light *light, char *stream)
         value = atoi(pos);
         if (value <= 10000) {
             light->threshold = value;
-            change = true;
+            cmd = BLCMD_DATA_CHANGE;
         }
     }
 
@@ -57,18 +68,18 @@ bool parse_commands(Light *light, char *stream)
         value = atoi(pos);
         if (value >= 1000 && value <= 40000) {
             light->temperature = value;
-            change = true;
+            cmd = BLCMD_DATA_CHANGE;
         }  
     }
 
-    pos = next_token(strstr(stream, "BRIGHT "));
+    pos = next_token(strstr(stream, "LEVEL "));
     if (pos != NULL && isdigit((int)*pos)) {
         value = atoi(pos);
         if (value <= 100) {
             light->brightness = value;
-            change = true;
+            cmd = BLCMD_DATA_CHANGE;
         }
     }
 
-    return change;
+    return cmd;
 }

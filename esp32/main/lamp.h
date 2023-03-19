@@ -67,14 +67,28 @@ typedef struct {
 
 typedef struct {
     bool status;
+    bool movement;
     uint8_t brightness;
     uint16_t temperature;
     uint16_t threshold;
 } Light;
 
+typedef enum {
+    BLCMD_NO_ACTION,
+    BLCMD_DATA_CHANGE,
+    BLCMD_DETECTION,
+    BLCMD_REQUEST
+} CommandAction;
+
 
 // PIR sensor
 void pir_sensor_config(gpio_isr_t isr_handler);
+void pir_add_isr(gpio_isr_t isr_handler);
+void pir_remove_isr(void);
+void movement_detection(
+    bool allow, gptimer_handle_t gptimer, 
+    gptimer_alarm_cb_t timer_action, gpio_isr_t gpio_handler
+);
 
 // LED lights
 void led_config(void);
@@ -96,7 +110,7 @@ uint16_t light_sensor_read_lux(void);
 
 // Bluetooth
 void bluetooth_config(void);
-bool parse_commands(Light *light, char *stream);
+CommandAction parse_commands(Light *light, char *stream);
 
 // Non-volatile storage
 esp_err_t nvs_load(Light *light);
@@ -104,9 +118,8 @@ esp_err_t nvs_save(Light *light);
 
 
 void timer_setup(gptimer_handle_t *gptimer, uint64_t seconds, gptimer_alarm_cb_t action);
-void timer_start(gptimer_handle_t gptimer);
-void timer_restart(gptimer_handle_t gptimer);
-void timer_stop(gptimer_handle_t gptimer);
+
+
 
 #endif
 

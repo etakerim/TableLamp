@@ -2,9 +2,20 @@
 
 
 void app_main(void)
+{    
+    i2c_config();
+    light_sensor_config();
+
+    // IDLE Task
+    while (1) {
+        uint16_t lux = light_sensor_read_lux();
+        printf("Lx: %d\n", lux);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+}
+
+void app_main(void)
 {
-    uint16_t temperature = 2000;
-    uint8_t intensity = 0;
     led_config();
 
     RGB color = {.r = 0, .g = 0, .b = 0};
@@ -13,9 +24,6 @@ void app_main(void)
     bool blue_up = false;
 
     while (1) {
-        if (intensity >= 90)
-            intensity = 0;
-
         if (red_up) {
             color.r += 8;
             if (color.r >= 248) {
@@ -42,9 +50,24 @@ void app_main(void)
         }
         printf("COLOR: %d, %d, %d\n", color.r, color.g, color.b);
         
-        led_output(temperature, intensity);
-        intensity += 1;
+        led_set_color(color);
         vTaskDelay(250 / portTICK_PERIOD_MS);
+    }
+}
+
+void app_main(void)
+{
+    uint16_t temperature = 1000;
+    uint8_t intensity = 100;
+    led_config();
+
+    while (1) {
+        if (temperature >= 10000)
+            temperature = 1000;
+
+        led_output(temperature, intensity);
+        temperature += 500;
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
 
