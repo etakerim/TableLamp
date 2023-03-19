@@ -1,22 +1,19 @@
 #include "lamp.h"
 
-// TIMER_SCALE is value of timer at 1 second
-#define TIMER_DIVIDER         16
-#define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)
 
-void pir_sensor_config(void)
+void pir_sensor_config(gpio_isr_t isr_handler)
 {
     gpio_config_t io_conf = {
         .intr_type = GPIO_INTR_POSEDGE,
         .mode = GPIO_MODE_INPUT,
         .pin_bit_mask = GPIO_PIR,
-        .pull_down_en = 1,
+        .pull_down_en = 0,
         .pull_up_en = 0
     };
-    gpio_config(&io_conf);
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
 
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(GPIO_PIR, gpio_isr_handler, NULL);
+    ESP_ERROR_CHECK(gpio_install_isr_service(0));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(PIR_SENSOR, isr_handler, NULL));
 }
 
 
@@ -25,10 +22,10 @@ void timer_setup(gptimer_handle_t *gptimer, uint64_t seconds, gptimer_alarm_cb_t
     gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = 1
+        .resolution_hz = 1500               // Maximum prescaler: 65536 (res = 1200 Hz)
     };
     gptimer_alarm_config_t timer_alarm = {
-        .alarm_count=seconds
+        .alarm_count=(1500 * seconds),
     };
     gptimer_event_callbacks_t cbs = {
         .on_alarm = action, 
@@ -40,30 +37,18 @@ void timer_setup(gptimer_handle_t *gptimer, uint64_t seconds, gptimer_alarm_cb_t
     ESP_ERROR_CHECK(gptimer_enable(*gptimer));
 }
 
-void clock_start(void)
+void timer_start(gptimer_handle_t gptimer)
 {
-    
+    gptimer_set_raw_count(gptimer, 0);
+    gptimer_start(gptimer);
 }
 
-void clock_restart(void)
+void timer_restart(gptimer_handle_t gptimer)
 {
-    
+    gptimer_set_raw_count(gptimer, 0);
 }
 
-
-/*
-void light_switch_config(void)
+void timer_stop(gptimer_handle_t gptimer)
 {
-    gpio_config_t io_conf = {
-        .intr_type = GPIO_INTR_POSEDGE,
-        .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = GPIO_LIGHT_SWITCH,
-        .pull_down_en = 1,
-        .pull_up_en = 0
-    };
-    gpio_config(&io_conf);
-
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(GPIO_LIGHT_SWITCH, gpio_isr_handler, NULL);
+    gptimer_stop(gptimer);
 }
-*/

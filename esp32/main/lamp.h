@@ -21,6 +21,11 @@
 #include "nvs_flash.h"
 
 
+// After what time in seconds in light turned off
+#define PIR_TIMEOUT_S       20
+
+#define MUTEX_TIMEOUT_MS    ((TickType_t)(500))
+
 #define NUM_OF_LEDS     3
 #define LED_RED         25
 #define LED_GREEN       26
@@ -68,46 +73,44 @@ typedef struct {
 } Light;
 
 
-void gpio_isr_handler(void* arg);
+// PIR sensor
+void pir_sensor_config(gpio_isr_t isr_handler);
 
-void pir_sensor_config(void);
-void light_switch_config(void);
-void bluetooth_config(void);
-void i2c_config(void);
-
-
-int led_duty_color(uint8_t level);
+// LED lights
 void led_config(void);
+void led_off(void);
 void led_set_color(RGB rgb);
+void led_output(uint16_t temperature, uint8_t brightness);
 
 float clamp(float value, float min, float max);
-
 RGB kelvin_to_rgb(uint16_t kelvin);
 HSV rgb_to_hsv(RGB rgb);
 RGB hsv_to_rgb(HSV hsv);
-void led_output(uint16_t temperature, uint8_t brightness);
 
 
+// Light sensor
+void i2c_config(void);
 void light_sensor_config(void);
 void light_sensor_lux_interrupt(uint16_t low, uint16_t high);
 uint16_t light_sensor_read_lux(void);
 
-
+// Bluetooth
+void bluetooth_config(void);
 bool parse_commands(Light *light, char *stream);
 
+// Non-volatile storage
 esp_err_t nvs_load(Light *light);
 esp_err_t nvs_save(Light *light);
 
+
 void timer_setup(gptimer_handle_t *gptimer, uint64_t seconds, gptimer_alarm_cb_t action);
-
-void clock_start(void);
-
-void clock_restart(void);
+void timer_start(gptimer_handle_t gptimer);
+void timer_restart(gptimer_handle_t gptimer);
+void timer_stop(gptimer_handle_t gptimer);
 
 #endif
 
 /*
-  *Hardware and tasks*
 
 RGB Dimmable LED strip (PWM output)
     - GPIO25, OUT -> Green

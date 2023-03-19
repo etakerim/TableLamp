@@ -3,18 +3,20 @@
 
 #define LEDC_TIMER              LEDC_TIMER_0
 #define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_CHANNEL            LEDC_CHANNEL_0
 #define LEDC_DUTY_RES           LEDC_TIMER_8_BIT  // Same as Color resolution
 #define LEDC_FREQUENCY          (5000)            // Hz
 
 
-static ledc_channel_config_t leds[NUM_OF_LEDS];
+ledc_channel_config_t leds[NUM_OF_LEDS];
 
 
 void led_config(void)
 {
     const int led_pins[NUM_OF_LEDS] = {
         LED_RED, LED_GREEN, LED_BLUE
+    };
+    const int led_channels[NUM_OF_LEDS] = {
+        LEDC_CHANNEL_0, LEDC_CHANNEL_1, LEDC_CHANNEL_2
     };
 
     ledc_timer_config_t ledc_timer = {
@@ -29,7 +31,7 @@ void led_config(void)
 
     for (uint8_t i = 0; i < NUM_OF_LEDS; i++) {
         leds[i].speed_mode  = LEDC_MODE;
-        leds[i].channel = LEDC_CHANNEL;
+        leds[i].channel = led_channels[i];
         leds[i].timer_sel = LEDC_TIMER,
         leds[i].intr_type = LEDC_INTR_DISABLE;
 
@@ -47,6 +49,14 @@ void led_set_color(RGB rgb)
 
     for (uint8_t i = 0; i < NUM_OF_LEDS; i++) {
         ledc_set_duty(leds[i].speed_mode, leds[i].channel, color[i]);
+        ledc_update_duty(leds[i].speed_mode, leds[i].channel);
+    }
+}
+
+void led_off(void)
+{
+    for (uint8_t i = 0; i < NUM_OF_LEDS; i++) {
+        ledc_set_duty(leds[i].speed_mode, leds[i].channel, 0);
         ledc_update_duty(leds[i].speed_mode, leds[i].channel);
     }
 }

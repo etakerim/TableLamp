@@ -112,7 +112,7 @@ static uint16_t i2c_read_word(uint8_t reg_addr)
 {
     uint8_t packet[2] = {};
     i2c_read(reg_addr, packet, 2);
-    return (packet[0] << 8) | (packet[0] & 0xFF);
+    return (packet[1] << 8) | (packet[0] & 0xFF);
 }
 
 
@@ -133,8 +133,10 @@ static void tsl2591_set_gain(uint8_t gain)
     uint8_t control = 0;
 
     i2c_read(CONTROL_REGISTER, &control, 1);
+    printf("CTRL: %x\n", control);
     control &= 0xcf; 
     control |= gain;
+    printf("CTRL: %x\n", control);
     i2c_write(CONTROL_REGISTER, control);
 }
 
@@ -151,43 +153,11 @@ static void tsl2591_set_integral_time(uint8_t time)
     uint8_t control = 0;
 
     i2c_read(CONTROL_REGISTER, &control, 1);
+    printf("CTRL: %x\n", control);
     control &= 0xf8;
     control |= time;
+    printf("CTRL: %x\n", control);
     i2c_write(CONTROL_REGISTER, control);
-}
-
-static void tsl2591_lux_interrupt(uint16_t low, uint16_t high, uint8_t gain, uint8_t time)
-{
-    uint16_t atime  = 100 * time + 100;
-    double again = 1.0;
-
-    if (gain == MEDIUM_AGAIN) {
-        again = 25.0;
-    } else if (gain == HIGH_AGAIN) {
-        again = 428.0;
-    } else if (gain == MAX_AGAIN) {
-        again = 9876.0;
-    }
-    
-    double cpl = (atime * again) / LUX_DF;
-    uint16_t ch = i2c_read_word(CHAN1_LOW);
-    
-    high =  (int)(cpl * high) + 2 * ch - 1;
-    low = (int)(cpl * low) + 2 * ch + 1;
-		
-    tsl2591_enable();
-    i2c_write(AILTL_REGISTER, low & 0xFF);
-    i2c_write(AILTH_REGISTER, low >> 8);
-    
-    i2c_write(AIHTL_REGISTER, high & 0xFF);
-    i2c_write(AIHTH_REGISTER, high >> 8);
-    
-    i2c_write(NPAILTL_REGISTER, 0);
-    i2c_write(NPAILTH_REGISTER, 0);
-    
-    i2c_write(NPAIHTL_REGISTER, 0xff);
-    i2c_write(NPAIHTH_REGISTER, 0xff);
-    tsl2591_disable();
 }
 
 static uint16_t tsl2591_read_lux(uint8_t gain, uint8_t time)
@@ -246,15 +216,52 @@ static uint16_t tsl2591_read_lux(uint8_t gain, uint8_t time)
     return ((channel_0 - (2 * channel_1)) / cpl);
 }
 
+static void tsl2591_lux_interrupt(uint16_t low, uint16_t high, uint8_t gain, uint8_t time)
+{
+    uint16_t atime  = 100 * time + 100;
+    double again = 1.0;
+
+    if (gain == MEDIUM_AGAIN) {
+        again = 25.0;
+    } else if (gain == HIGH_AGAIN) {
+        again = 428.0;
+    } else if (gain == MAX_AGAIN) {
+        again = 9876.0;
+    }
+    
+    double cpl = (atime * again) / LUX_DF;
+    uint16_t ch = i2c_read_word(CHAN1_LOW);
+    
+    high =  (int)(cpl * high) + 2 * ch - 1;
+    low = (int)(cpl * low) + 2 * ch + 1;
+		
+    tsl2591_enable();
+    i2c_write(AILTL_REGISTER, low & 0xFF);
+    i2c_write(AILTH_REGISTER, low >> 8);
+    
+    i2c_write(AIHTL_REGISTER, high & 0xFF);
+    i2c_write(AIHTH_REGISTER, high >> 8);
+    
+    i2c_write(NPAILTL_REGISTER, 0);
+    i2c_write(NPAILTH_REGISTER, 0);
+    
+    i2c_write(NPAIHTL_REGISTER, 0xff);
+    i2c_write(NPAIHTH_REGISTER, 0xff);
+    tsl2591_disable();
+}
+
 
 void light_sensor_config(void)
 {
-    // i2c_read(&ID_REGISTER, 1);
+    // uint8_t data = 0;
+    //ESP_ERROR_CHECK(i2c_read(ID_REGISTER, &data, 1));
+    //printf("ID: %x\n", data);
+
     tsl2591_enable();
-    tsl2591_set_gain(MEDIUM_AGAIN);             // 25X GAIN
+    /*tsl2591_set_gain(MEDIUM_AGAIN);             // 25X GAIN
     tsl2591_set_integral_time(ATIME_200MS);     // 200ms Integration time
     i2c_write(PERSIST_REGISTER, 0x01);          // Filter
-    tsl2591_disable();
+    tsl2591_disable();*/
 }
 
 void light_sensor_lux_interrupt(uint16_t low, uint16_t high)
