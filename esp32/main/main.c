@@ -1,18 +1,6 @@
 #include "lamp.h"
 
 
-/*
-TODO: CHECKLIST
-- [] HW debug - Skontroluj osciloskopom a možno vymeň tranzistor pre Red LED (bol prepólovaný)
-- [] Debug I2C driver for read_lux (write je divný)
-- [] Debug - UART write_bytes - neposiela nič pri REQ
-
-- [] Android app bluetooth send to ESP32 (už funguje terminál appka aj príkazy)
-- [] Android app zobrazí aktuálne hodnoty zo zariadenia
-- [] NVS config
-- [] Dokumentácia
-*/
-
 gptimer_handle_t timer = NULL;
 
 TaskHandle_t gpio_task = NULL;
@@ -95,7 +83,7 @@ void receive_commands_task(void* arg)
             case BLCMD_REQUEST:
                 int send_len = snprintf(
                     stream, BL_BUF_SIZE - 1, "@LAMP:%d,%d,%d,%d,%d",
-                    light.status, light.movement, light.temperature, 
+                    light.status, light.movement, light.temperature,
                     light.brightness, light.threshold
                 );
                 uart_write_bytes(UART_PORT_NUM, (const char *) stream, send_len);  // TODO
@@ -142,7 +130,7 @@ void light_switch_task(void* arg)
 
 
 void app_main(void)
-{      
+{
     light_mutex = xSemaphoreCreateMutex();
 
     timer_setup(&timer, PIR_TIMEOUT_S, timer_on_alarm);
@@ -156,7 +144,7 @@ void app_main(void)
 
     // esp_err_t err = nvs_flash_init();
     // if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-    //   ESP_ERROR_CHECK(nvs_flash_erase());     // NVS partition was truncated and needs to be erased 
+    //   ESP_ERROR_CHECK(nvs_flash_erase());     // NVS partition was truncated and needs to be erased
     //    ESP_ERROR_CHECK(nvs_flash_init());      //  Retry nvs_flash_init
     //}
     //nvs_load(&light);
