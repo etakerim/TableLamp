@@ -19,10 +19,13 @@ class BluetoothService(activityHandler: Handler) {
     private var handler: Handler = activityHandler
 
     private inner class ConnectThread(device: BluetoothDevice) : Thread() {
-        private val bleUUID: UUID = UUID.fromString("7b985306-5d4c-4c8b-a143-09b861f2e809")
+        // Default UUID:
+        // private val bleUUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
 
-        private val bleSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
-            device.createRfcommSocketToServiceRecord(bleUUID)
+        private val bleSocket: BluetoothSocket? by lazy {
+            val lampUUID: UUID = device.uuids[0].uuid
+            logger.info("UUID: $lampUUID")
+            device.createRfcommSocketToServiceRecord(lampUUID)
         }
 
         override fun run() {
@@ -46,46 +49,39 @@ class BluetoothService(activityHandler: Handler) {
         }
     }
 
-    private inner class ConnectedThread(private val mmSocket: BluetoothSocket) : Thread() {
-        private val mmInStream: InputStream = mmSocket.inputStream
-        private val mmOutStream: OutputStream = mmSocket.outputStream
-        private val mmBuffer: ByteArray = ByteArray(1024)
+    private inner class ConnectedThread(private val socket: BluetoothSocket) : Thread() {
+        private val inboudStream: InputStream = socket.inputStream
+        private val outboundStream: OutputStream = socket.outputStream
+        private val buffer: ByteArray = ByteArray(1024)
 
         override fun run() {
-            handler.obtainMessage(MESSAGE_CONNECTED)
+            handler.obtainMessage(MESSAGE_CONNECTED).sendToTarget()
             var numBytes: Int
 
             while (true) {
                 numBytes = try {
-                    mmInStream.read(mmBuffer)
+                    inboudStream.read(buffer)
                 } catch (e: IOException) {
                     logger.info("Input stream was disconnected")
                     break
                 }
-                logger.info("Input Stream" + String(mmBuffer))
-
-                // Send the obtained bytes to the UI activity.
-                val readMsg = handler.obtainMessage(MESSAGE_READ, numBytes, -1, mmBuffer)
-                readMsg.sendToTarget()
+                handler.obtainMessage(MESSAGE_READ, numBytes, -1, buffer).sendToTarget()
             }
         }
 
         fun write(bytes: ByteArray) {
             try {
-                mmOutStream.write(bytes)
+                outboundStream.write(bytes)
             } catch (e: IOException) {
                 logger.warning("Error occurred when sending data")
                 return
             }
-
-            // Share the sent message with the UI activity.
-            val writtenMsg = handler.obtainMessage(MESSAGE_WRITE, -1, -1, mmBuffer)
-            writtenMsg.sendToTarget()
+            handler.obtainMessage(MESSAGE_WRITE, -1, -1, buffer).sendToTarget()
         }
 
         fun cancel() {
             try {
-                mmSocket.close()
+                socket.close()
             } catch (e: IOException) {
                 logger.warning( "Could not close the connect socket")
             }
@@ -108,10 +104,10 @@ class BluetoothService(activityHandler: Handler) {
         connectThread?.start()
     }
 
-    fun connected(mmSocket: BluetoothSocket?) {
-        if (mmSocket != null) {
-            logger.warning("BT Connected")
-            connectedThread = ConnectedThread(mmSocket)
+    fun connected(socket: BluetoothSocket?) {
+        if (socket != null) {
+            logger.warning("Bluetooth Connected")
+            connectedThread = ConnectedThread(socket)
             connectedThread?.start()
             send("REQ")
         }

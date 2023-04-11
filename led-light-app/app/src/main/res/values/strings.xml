@@ -17,4 +17,6 @@
     <string name="motion_detection">Detekcia pohybu</string>
     <string name="connect_wait">Počkajte na pripojenie ku svietidlu …</string>
     <string name="halt_app">Zavieť aplikáciu</string>
+    <string name="bt_granted">Bluetooth povolené</string>
+    <string name="bt_denied">Bluetooth zakázané</string>
 </resources>
