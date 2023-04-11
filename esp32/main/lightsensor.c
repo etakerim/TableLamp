@@ -133,10 +133,8 @@ static void tsl2591_set_gain(uint8_t gain)
     uint8_t control = 0;
 
     i2c_read(CONTROL_REGISTER, &control, 1);
-    printf("CTRL: %x\n", control);
     control &= 0xcf; 
     control |= gain;
-    printf("CTRL: %x\n", control);
     i2c_write(CONTROL_REGISTER, control);
 }
 
@@ -153,10 +151,8 @@ static void tsl2591_set_integral_time(uint8_t time)
     uint8_t control = 0;
 
     i2c_read(CONTROL_REGISTER, &control, 1);
-    printf("CTRL: %x\n", control);
     control &= 0xf8;
     control |= time;
-    printf("CTRL: %x\n", control);
     i2c_write(CONTROL_REGISTER, control);
 }
 
@@ -254,14 +250,13 @@ static void tsl2591_lux_interrupt(uint16_t low, uint16_t high, uint8_t gain, uin
 void light_sensor_config(void)
 {
     // uint8_t data = 0;
-    //ESP_ERROR_CHECK(i2c_read(ID_REGISTER, &data, 1));
-    //printf("ID: %x\n", data);
-
+    // ESP_ERROR_CHECK(i2c_read(ID_REGISTER, &data, 1));
+    // printf("ID: %x\n", data);
     tsl2591_enable();
-    /*tsl2591_set_gain(MEDIUM_AGAIN);             // 25X GAIN
+    tsl2591_set_gain(MEDIUM_AGAIN);             // 25X GAIN
     tsl2591_set_integral_time(ATIME_200MS);     // 200ms Integration time
     i2c_write(PERSIST_REGISTER, 0x01);          // Filter
-    tsl2591_disable();*/
+    tsl2591_disable();
 }
 
 void light_sensor_lux_interrupt(uint16_t low, uint16_t high)
@@ -271,5 +266,5 @@ void light_sensor_lux_interrupt(uint16_t low, uint16_t high)
 
 uint16_t light_sensor_read_lux(void)
 {
-    return tsl2591_read_lux(MEDIUM_AGAIN, ATIME_200MS);
+    return 5; // tsl2591_read_lux(MEDIUM_AGAIN, ATIME_200MS);
 }

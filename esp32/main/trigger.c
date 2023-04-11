@@ -54,6 +54,7 @@ void movement_detection(
     gptimer_alarm_cb_t timer_action, gpio_isr_t gpio_action
 ) 
 {
+    gptimer_disable(timer);
     if (allow) {
         pir_add_isr(gpio_action);
         gptimer_event_callbacks_t cbs = {

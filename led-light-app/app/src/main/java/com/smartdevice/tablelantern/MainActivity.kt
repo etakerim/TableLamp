@@ -29,9 +29,9 @@ TODO: Check disconnect
 const val MESSAGE_READ: Int = 0
 const val MESSAGE_WRITE: Int = 1
 const val MESSAGE_CONNECTED: Int = 3
+const val MESSAGE_DISCONNECT: Int = 4
 
-// https://github.com/android/connectivity-samples/blob/master/BluetoothChat/Application/src/main/java/com/example/android/bluetoothchat/BluetoothChatService.java
-// https://github.com/android/connectivity-samples/blob/master/BluetoothChat/Application/src/main/java/com/example/android/bluetoothchat/BluetoothChatFragment.java
+// https://github.com/android/connectivity-samples/tree/master/BluetoothChat
 // https://www.youtube.com/watch?v=aE8EbDmrUfQ
 
 @Suppress("DEPRECATION")
@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
         val lightSwitchBtn: ToggleButton = findViewById(R.id.light_switch)
         val motionDetectBtn: Switch = findViewById(R.id.motion_detection)
         val applySettingsBtn: Button = findViewById(R.id.apply_btn)
+
+        applySettingsBtn.setOnClickListener { onApplySettings() }
 
         lightSwitchBtn.isEnabled = false
         lightSwitchBtn.isClickable = false
@@ -161,7 +163,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private fun setLightState(message: String) {
-        logger.info("Input Stream: [${message}]")
+        logger.info("Command: '${message}'")
         val lightSwitchBtn: ToggleButton = findViewById(R.id.light_switch)
         val motionDetectBtn: Switch = findViewById(R.id.motion_detection)
         val applySettingsBtn: Button = findViewById(R.id.apply_btn)
@@ -170,12 +172,22 @@ class MainActivity : AppCompatActivity() {
         val kelvinEdit: EditText = findViewById(R.id.color_temperature)
         val luxEdit: EditText = findViewById(R.id.lux_threshold)
 
-        // TODO: Parse message & SET STATE
-        lightSwitchBtn.isChecked = false
-        motionDetectBtn.isChecked = true
-        levelEdit.setText(100.toString())
-        kelvinEdit.setText(4000.toString())
-        luxEdit.setText(50.toString())
+        // Turn off listeners when changing settings
+        lightSwitchBtn.setOnCheckedChangeListener(null)
+        motionDetectBtn.setOnCheckedChangeListener(null)
+
+        for (option in message.removePrefix("{").removeSuffix("}").split(",")) {
+            val attr = option.split("/")
+            if (attr.size != 2)
+                continue
+            when (attr[0]) {
+                "S" -> { lightSwitchBtn.isChecked = (attr[1] == "1") }
+                "M" -> { motionDetectBtn.isChecked = (attr[1] == "1") }
+                "B" -> { levelEdit.setText(attr[1]) }
+                "K" -> { kelvinEdit.setText(attr[1]) }
+                "L" -> { luxEdit.setText(attr[1]) }
+            }
+        }
 
         // Enable edit
         lightSwitchBtn.isEnabled = true
@@ -187,7 +199,6 @@ class MainActivity : AppCompatActivity() {
 
         lightSwitchBtn.setOnCheckedChangeListener { _, _ -> onSwitchLight() }
         motionDetectBtn.setOnCheckedChangeListener { _, _ -> onMotionDetectSwitch() }
-        applySettingsBtn.setOnClickListener { onApplySettings() }
     }
 
     class BlHandler(private val outerClass: WeakReference<MainActivity>) : Handler() {
@@ -195,20 +206,16 @@ class MainActivity : AppCompatActivity() {
 
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                MESSAGE_WRITE -> {
-                    val writeBuf = msg.obj as ByteArray
-                    val writeMessage = String(writeBuf)
-                }
                 MESSAGE_READ -> {
-                    val readBuf = msg.obj as ByteArray
-                    val readMessage = String(readBuf, 0, msg.arg1)
-                    val activity: MainActivity = outerClass.get() ?: return
-                    activity.setLightState(readMessage)
+                    outerClass.get()?.setLightState(msg.obj as String)
                 }
                 MESSAGE_CONNECTED -> {
                     logger.info("Connected")
-                    val activity: MainActivity = outerClass.get() ?: return
-                    activity.btWaitDialog.dismiss()
+                    outerClass.get()?.btWaitDialog?.dismiss()
+                }
+                MESSAGE_DISCONNECT -> {
+                    logger.info("Disconnected")
+                    outerClass.get()?.lampConnect()
                 }
             }
         }

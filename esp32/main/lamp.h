@@ -111,8 +111,10 @@ uint16_t light_sensor_read_lux(void);
 // Bluetooth
 void bluetooth_config(void);
 CommandAction parse_commands(Light *light, char *stream);
+void bluetooth_send_status(char *stream, Light *light);
 
 // Non-volatile storage
+esp_err_t nvs_config();
 esp_err_t nvs_load(Light *light);
 esp_err_t nvs_save(Light *light);
 

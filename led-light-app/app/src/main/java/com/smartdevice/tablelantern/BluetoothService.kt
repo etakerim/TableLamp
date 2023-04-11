@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.os.Handler
+import android.util.Log
+import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -56,16 +58,24 @@ class BluetoothService(activityHandler: Handler) {
 
         override fun run() {
             handler.obtainMessage(MESSAGE_CONNECTED).sendToTarget()
-            var numBytes: Int
+            var packet = String()
 
             while (true) {
-                numBytes = try {
-                    inboudStream.read(buffer)
+                try {
+                    val bytes = inboudStream.read(buffer)
+                    val readMessage = String(buffer, 0, bytes)
+                    if (readMessage.contains("{")) {
+                        packet = String()
+                    }
+                    packet += readMessage
+                    if (readMessage.contains("}")) {
+                        handler.obtainMessage(MESSAGE_READ, -1, -1, packet).sendToTarget()
+                    }
                 } catch (e: IOException) {
                     logger.info("Input stream was disconnected")
+                    handler.obtainMessage(MESSAGE_DISCONNECT).sendToTarget()
                     break
                 }
-                handler.obtainMessage(MESSAGE_READ, numBytes, -1, buffer).sendToTarget()
             }
         }
 

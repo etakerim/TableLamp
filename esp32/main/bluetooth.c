@@ -83,3 +83,14 @@ CommandAction parse_commands(Light *light, char *stream)
 
     return cmd;
 }
+
+
+void bluetooth_send_status(char *stream, Light *light)
+{
+    snprintf(
+        stream, BL_BUF_SIZE - 1, "{S/%d,M/%d,K/%d,B/%d,L/%d}",
+        light->status, light->movement, light->temperature,
+        light->brightness, light->threshold
+    );
+    uart_write_bytes(UART_PORT_NUM, (const char *) stream, strlen(stream));
+}
