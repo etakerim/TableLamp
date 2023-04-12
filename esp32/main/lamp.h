@@ -104,8 +104,11 @@ RGB hsv_to_rgb(HSV hsv);
 
 // Light sensor
 void i2c_config(void);
+esp_err_t i2c_read(uint8_t i2c_address, uint8_t cmd, uint8_t *value, size_t len);
+esp_err_t i2c_write(uint8_t i2c_address, uint8_t cmd, uint8_t value);
+esp_err_t i2c_read_word(uint8_t i2c_address, uint8_t cmd, uint16_t *value);
+
 void light_sensor_config(void);
-void light_sensor_lux_interrupt(uint16_t low, uint16_t high);
 uint16_t light_sensor_read_lux(void);
 
 // Bluetooth

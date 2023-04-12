@@ -7,6 +7,8 @@ TaskHandle_t gpio_task = NULL;
 TaskHandle_t timer_task = NULL;
 
 SemaphoreHandle_t light_mutex = NULL;
+SemaphoreHandle_t lux_sensor_mutex = NULL;
+
 Light light = {
     .status = false,
     .movement = true,
@@ -20,17 +22,30 @@ Light light = {
 void lamp_scene(uint16_t lux)
 {
     if (light.status && lux <= light.threshold) {
+        // Confirm request status in case of change by Bluetooth, but low lighting
+        light.status = true;  
         if (light.movement) {
             gptimer_set_raw_count(timer, 0);
             gptimer_start(timer);
         }
         led_output(light.temperature, light.brightness);
     } else {
+        light.status = false;
         if (light.movement) {
             gptimer_stop(timer);
         }
         led_off();
     }
+}
+
+uint16_t illuminance_level(void)
+{
+    uint16_t lx = 0;
+    if (xSemaphoreTake(lux_sensor_mutex, MUTEX_TIMEOUT_MS) == pdTRUE) {
+        lx = light_sensor_read_lux();
+        xSemaphoreGive(lux_sensor_mutex);
+    }
+    return lx;
 }
 
 
@@ -62,13 +77,13 @@ void receive_commands_task(void* arg)
             continue;
 
         stream[length] = '\0';
-        uint16_t lux = light_sensor_read_lux();
+        uint16_t lux = illuminance_level();
 
         // Needs mutex when accessing RGB LED
         if (xSemaphoreTake(light_mutex, MUTEX_TIMEOUT_MS) == pdTRUE) {
             cmd = parse_commands(&light, stream);
-            nvs_save(&light);
             xSemaphoreGive(light_mutex);
+            nvs_save(&light);
         }
 
 
@@ -110,7 +125,7 @@ void light_switch_task(void* arg)
 
     while (1) {
         if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY) == pdTRUE) {
-            uint16_t lux = light_sensor_read_lux();
+            uint16_t lux = illuminance_level();
             gptimer_set_raw_count(timer, 0);
 
             if (xSemaphoreTake(light_mutex, MUTEX_TIMEOUT_MS) == pdTRUE) {
@@ -149,6 +164,7 @@ void debug_status(Light *light)
 void app_main(void)
 {
     light_mutex = xSemaphoreCreateMutex();
+    lux_sensor_mutex = xSemaphoreCreateMutex();
 
     nvs_config();
     // nvs_save(&light);  // Uncomment to rewrite NVS with defaults
@@ -165,7 +181,7 @@ void app_main(void)
 
     // Init lamp based on boot settings
     movement_detection(light.movement, timer, timer_on_alarm, switch_isr_handler);
-    uint16_t lux = light_sensor_read_lux();
+    uint16_t lux = illuminance_level();
     lamp_scene(lux);        // Can call without mutex here - no other task runs at this time
     // debug_status(&light);
 

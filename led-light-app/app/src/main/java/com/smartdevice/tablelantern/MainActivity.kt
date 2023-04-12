@@ -19,12 +19,6 @@ import java.lang.ref.WeakReference
 import java.util.*
 import java.util.logging.Logger
 
-/*
-TODO: príjem a nastavenie stavu (parsovanie správy)
-TODO: FW save state to NVS
-TODO: FW send status update on timeout and with every command
-TODO: Check disconnect
- */
 
 const val MESSAGE_READ: Int = 0
 const val MESSAGE_WRITE: Int = 1
