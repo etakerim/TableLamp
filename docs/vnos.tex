@@ -26,7 +26,7 @@
 \usepackage{titlesec}
 
 \usepackage[style=iso-numeric,backend=biber]{biblatex}
-\addbibresource{references.bib}
+\addbibresource{literature.bib}
 %\AtBeginBibliography{\small}
 
 \geometry{
@@ -53,7 +53,6 @@
 \begin{flushleft}
 \textbf{Autor:} Bc. Miroslav Hájek \\
 \textbf{Študijný program:} Inteligentné softvérové systémy \\
-\textbf{Ročník:} 1. \\
 \textbf{Predmet:} Vnorené systémy \\
 \textbf{Akademický rok:} 2022 / 2023 \\
 \end{flushleft}
@@ -70,89 +69,151 @@
 \setcounter{page}{1}
 
 \section{Analýza problematiky}
-% Moduly a ich cena, driver
-Dôvod pre takéto svetlo: Motivácia
-Požiadavky
+Zariadenie na ovládanie svietidla sa má skladať z dvoch nezávislých integrovaných častí: riadiaca jednotka s firmvérom priamo regulujúca spínanie lampy podľa senzorov, a mobilná aplikácia na zmenu aktívnych nastavení svetla a detekcie pohybu komunikujúca cez Bluetooth. V sekcii popíšeme výber vhodných súčiastok a základné princíp fungovania.
 
-\subsubsection{MCU, Senzory, Akčné členy}
-Zdôvodnenie každého prvku, alternatívy
+\subsection{Riadiaca jednotka}
+Mikrokontrolér \textbf{ESP32 WeMos Lolin D32} (Obr.~\ref{fig:esp32}) sme zvolili spomedzi ostatných bežne dostupných vývojových dosiek (ako sú Arduino, Raspeberry Pi, STM32, BeagleBone a pod.) hlavne pre podporu pre viacerých štandardných mikroprocesorových rozhraní na rozličných pinoch. Doska je postavená na module \emph{ESP32-WROOM-32} \cite{noauthor_esp32-wroom-32_2023}, ktorý disponuje procesorom s frekvenciou 80 MHz (až do 240 MHz) a pamäťou 4 MB Flash a 520 kB SRAM prilíš nelimitujúce rozhodnutia na účely prototypu. 
+
+Napájacie napätie dosky je 3,3 V, ale cez USB konektor môžeme pripojiť zdroj 5 V. ESP-32 sa vyznačuje aj dobrou podporou od výrobcu v podobe SDK obsahujúce ovládače na všetky dostupné rozhrania pre periférie ESP-IDF \cite{noauthor_esp-idf_nodate}, ktorý tiež zahŕňa operačný systém reálneho času FreeRTOS.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{assets/esp32.jpg}
+	\caption{Vývojová doska ESP32 WeMos Lolin D32 \cite{mischianti_esp32_2023}}
+	\label{fig:esp32}
+\end{figure}
+
+ESP-32 síce disponuje konektivitou na WiFi a Bluetooth, ale funkcie pre RFCOMM nie sú zatiaľ implementované, preto sa Bluetooth komunikácia musí realizovať externým \textbf{modulom HC-05} (Obr.~\ref{fig:hc-05}). Posielanie a príjem správ sa uskutočnuje cez \emph{UART} protokol, kde piny RXD a TXD musia byť na napäťových úroviach 3,3 V, zatiaľ čo napájanie je v rozmedzí 3,6 - 6 V (zväčša 5 V). Baudová rýchlosť je predvolene určená na 9600. 
+
+Pin Enable slúži na prepnutie modulu do AT príkazového režimu (high úroveň), v ktorom je možné upraviť napr. baud. Pin State signalizuje stav Bluetooth pripojenia a je zároveň zapojený na indikačnú LED, ktorá sa môže nachádzať v 3 stavoch: (i) bliknutie raz za 2 sekundy - príkazový režim, (ii) bliknutie 2-krát za 1 sekundu - pripojenie nadviazané, (iii) opakované blikanie - čakanie na pripojenie \cite{noauthor_hc-05_nodate}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{assets/hc-05.png}
+	\caption{Bluetooth modul HC-05 \cite{noauthor_hc-05_nodate}}
+	\label{fig:hc-05}
+\end{figure}
+
+\subsection{Senzory a akčné členy}
+Regulovateľné LED diódy v úlohe akčného členu musia reagovať na situáciu v okolitom prostredí, menovite detekciu pohybu človeka v miestnosti (cez infračervené čidlo) a intenzitu vonkajšieho osvetlenia (cez fotodiódu). 
+
+\subsubsection{RGB LED pásik}
+Typ LED pásiku sa vyberá podľa rôznych kritérii ako sú účel použitia, či ide o dekoráciu alebo má slúžiť na osvetlenie miestnosti. Na základe toho prispôsobíme svetelný výkon, farbu, vodovzornosť (stupeň ochrany krytom), rozmery, z čoho nakoniec vyplýva cieľové napätie najčastejšie 12~V, 24~V, 230~V. 
+
+Rozlišujeme pásiky podľa technológie produkcie teplotného odtieňu: jednofarebné, CCT - s dvoma typmi diód 2700~K a 6500~K a reguláciou medzi nimi, RGB - s štvorpinové LED diódami. Svietivosť pásiku ovplyvňuje príkon udávaný na meter, na nasvietenie napr. kuchynskej linky sa odporúča LED pásik s vyšším príkonom 12 - 20 W/m, tie je žiaduce namontovať na hliníkový podklad, z dôvodu chladenia. Ďalší faktor určujúci charakter svetla je rozloženie diód a ich počet na meter pásika \cite{123ledsk_ako_nodate}.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/rgb-led.jpg}
+	\caption{LED pásik}
+	\label{fig:rgb-led}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.5\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/bd711.png}
+	\caption{NPN tranzistor BD711}
+	\label{fig:bd-711}
+\end{subfigure}
+\caption{Akčné členy svietidla}
+\end{figure}
+
+Vhodný kandidát na interiérové osvetlenie stola sa ukazuje \textbf{RGB LED pásik} (Obr.~\ref{fig:rgb-led}) so samolepiacou fóliou 3M 300LSE bez krytia IP20, napätím zdroja 12~V, príkonom 14,4~W/m a hustotou diód 60~ks/m, ktorý vyprodukuje až 550~lm/m svetla \cite{123ledsk_rgb_nodate}. LED diódy na pásiku sú zapojenie tri do série so spoločnou anódou v 10 cm oddeliteľných úsekoch. Vetva pre červenú farbu má navyše zapojený do série 300~$\Omega$ SMD rezistor, ostatné vetvy 150~$\Omega$ rezistor.
+
+Jednotlivé farebných kanálov nemôžeme spínať a regulať priamo s pinu mikroprocesoru, pretože nie je prítomné rovnaké napätie: 3,3~V voči 12~V, a nepostačuje ani maximálny prúd $I_{OL}$ = 28 mA. Dedikovaný tranzistor bude spínať prúd do 1,2 A ($I = 14,4W / 12V$), preto potrebujeme výkonovejšie tranzistory ako bežne používaný rad BC ($I_C < 100 mA$). \textbf{NPN tranzistor BD711} (Obr.~\ref{fig:bd-711}) dokáže spínať prúd až do 12 A \cite{noauthor_bd711_nodate}.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[b]{0.4\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/pir-sb312.jpg}
+	\caption{PIR senzor pohybu SB312}
+	\label{fig:pir}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.4\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/tsl25911.jpg}
+	\caption{Senzor osvetlenia TSL25911}
+	\label{fig:light-sensor}
+\end{subfigure}
+\caption{Senzory s označením vývodov}
+\end{figure}
+
+\subsubsection{PIR pohybový senzor}
+Na detekciu pohybu ľudí sa používajú infračervené PIR senzory líšiace sa veľkosťou, citlivosťou a nastaviteľnosťou úrovne detektora. Zlepšenie snímacích vlastností je docielené plastovou Fresnelovou šošovkou na senzore. \textbf{Olimex SB312} (Obr.~\ref{fig:pir})sa vyzančuje kompaktnosťou s rozmermi PCB: 10 x 8 mm. Disponuje uhlom snímacieho kužela do 100° s dosahom 3 - 5 metrov. Oneskorenie výstupu voči detegovanému pohybu je 2 sekundy a po rovank dlhý čas podrží výstupnú logickú úroveň v jednotke. Napájacie napätie senzora je 3,3~V \cite{olimex_pir-sb312_nodate}.
+
+\subsubsection{Senzor okolitého osvetlenia}
+Modul senzora osvetlenia Waveshare WS-17146 (Obr.~\ref{fig:light-sensor}) obsahuje obvod TSL25911FN, ktorý samostatne prerátava nameranú intenzitu svetla na fotodióde do luxov s použím vzorca na aproximáciu ľudského videnia. Senzor pracuje na napätí 3,3~V aj 5~V a komunikuje cez I2C zbernicu do 400 kbit/s na adrese 0x29. Najdôležitejšie registre pre odčítanie aktuálnej hodnoty sú Control (0x01) a ALS Data (0x14 - 0x17) \cite{noauthor_tsl25911_nodate}.
+
+\subsection{Prehľad hardvérových súčiastok}
+Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre zhotovenie zariadenia. Cena hardvéru prototypu (jednokusová výroba) je odhadovaná na 55 € na základe nami zvolených dodávateľov.
+
+\paragraph{Riadiaca jednotka}
 \begin{itemize}
-\item ESP32 Lolin D32 - 3,3 V, Dostatok pamäte, Bluetooth vstataný (nedá sa použiť), FreeRTOS (viaceré tasky), ESP-IDF (dobrú podporu)
-\item HC-05 Bluetooth modul - komunikácia cez UART na predvolených 9600 Baud, popis pinov, 
-\item RGB LED pásik 14,4W/m 12V bez krytia IP20 1m - výkonový pásik, trojica v sérii RGB LED-iek v úsekoch 10 cm, rezistory. 
-\item PIR-SB312 (Olimex) 10x8mm - Detekcia pohybu (do 3,6V, 10mA) 
-\item WS-17146 TSL25911 Light Sensor  - Meranie vonkajšieho osvetlenia
+\item ESP32 WeMos Lolin D32 - Mikrokontrolér
+\item HC-05 - Bluetooth modul
 \end{itemize}
 
-\url{https://www.123led.sk/rgb-led-pasik-14-4w-m-bez-krytia/}
-RGB LED pásik dokáže vytvoriť akúkoľvek farbu. Farby vznikajú miešaním červenej, zelenej a modrej.
-Z výkonu 14,4W/m RGB pásik vyprodukuje až 550lm/m. Hustota LED diód je 60ks/m, opasok vďaka tomu svieti rovnomerne po celej svojej dĺžke. Tento pásik je potrebné nalepiť do hliníkovej lišty z dôvodu odvodu tepla z LED diód. Všetky naše pásky sú vybavené samolepiacou fóliou 3M 300LSE, ktorá skvele priľne k podkladu. Ten musí byť hladký a je potrebné ho pred lepením poriadne odmastiť.
-
-\url{https://www.olimex.com/Products/Components/Sensors/PIR-SB312/}
-    Static power consumption: <0.1mA; 
-    Delay time: 2 seconds; 
-    Block time: 2 seconds; 
-    Trigger mode: repeatable; 
-    Sensing range: <= 100 degrees cone angle, 3-5 meters
-    Working temperature: -20 - + 85 ℃ 
-    PCB Dimensions: 10mm x 8mm
-    
-  \url{https://www.waveshare.com/wiki/TSL25911_Light_Sensor}
-  
-  Light sensor: TSL25911FN
-Communication interface: I2C (constant address: 0 x 29)
-Effective range: 0~88000Lux
-
-
-\subsubsection{Elektrické súčiastky}
+\paragraph{Senzory a akčné členy}
 \begin{itemize}
-\item L7805CV Lineárny regulátor napätia 12V na 5V [0,40€] + DO3A chladič [€ 0,19]
-\item NPN Tranzistor BD711 [€ 0,59] (3x + 3x DO1 chladič [€ 0,26])
-\item Rezistory [2x 220 Ohm, 1x 330 Ohm]
-\item LED zdroj (trafo) 12V 30W IP67 [€ 10,95]
+\itemsep0pt
+\item RGB LED pásik 14,4W/m 12V bez krytia IP20 1m
+\item Olimex PIR-SB312 10x8mm 
+\item WS-17146 TSL25911 Light Sensor
 \end{itemize}
 
-\subsubsection{Mechanické súčiastky a prepoje}
-
+\paragraph{Elektrické súčiastky}
 \begin{itemize}
-\item Univerzálny plošný spoj [€0,50]
-\item Nástenný profil N3 biely + Opálový kryt 1m [€ 4,96]
-\item Koncovka profilu N3 bílá [€0,41]
-\item Flexo šnúra – 3m [€ 3,68]
-\item Konektory: RGB LED pásik [€ 0,45], Micro USB-B [€0,50], DC konektor a zásuvka [€1,2]
-\item Vypínač mezišnúrový [€ 0,41]
+\itemsep0pt
+\item L7805CV Lineárny regulátor napätia 12V na 5V
+\item NPN Tranzistor BD711 
+\item Rezistory - 220 $\Omega$, 330 $\Omega$
+\item LED zdroj (trafo) 12V 30W IP67
+\item Flexo šnúra – 3m
+\item Konektory: RGB LED pásik, Micro USB-B, DC konektor a zásuvka
 \end{itemize}
-\newpage
+
+\paragraph{Mechanické súčiastky}
+\begin{itemize}
+\itemsep0pt
+\item DO1 chladič
+\item DO3A chladič
+\item Univerzálny plošný spoj
+\item Nástenný profil N3 biely, Opálový kryt 1m
+\item Koncovka profilu N3 biela
+\item Vypínač mezišnúrový
+\end{itemize}
 
 \section{Návrh riešenia}
-% Schémy
 \begin{figure}
-\includegraphics[width=\textwidth]{assets/block-diagram.png}
+	\centering
+	\includegraphics[width=\textwidth]{assets/block-diagram.png}
+	\caption{Blokový diagram vnoreného systému}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\textwidth]{assets/electrical-schematics.png}
+	\centering
+	\includegraphics[width=0.8\textwidth]{assets/electrical-schematics.png}
+	\caption{Schéma obvodu}
 \end{figure}
-% Wireframe mobilnej aplikácie
 
-\subsection{Opis implementácie}
-% Firmvér v ESP-IDF
-% Softvér pre Android smartfón
-
+\subsection{Low-fidelity prototyp aplikácie}
 \begin{figure}
-\includegraphics[width=\textwidth]{assets/prototype.jpg}
+	\centering
+	\includegraphics[width=0.4\textwidth]{assets/wireframe.png}
+	\caption{Wireframe mobilnej aplikácie}
 \end{figure}
 
-\subsubsection{Spínanie svetla}
+\subsection{Spínanie svetla}
 \begin{figure}
-\includegraphics[width=\textwidth]{assets/light-states.png}
+    \centering
+	\includegraphics[width=0.7\textwidth]{assets/light-states.png}
+	\caption{Stavový diagram spínania svietidla}
 \end{figure}
 
-\begin{figure}
-\includegraphics[width=\textwidth]{assets/pir-motion-detect.png}
-\end{figure}
-
-\subsubsection{Nastavenie farby a intenzity svietidla}
 \begin{enumerate}
 \item Kelvin ← Temperature
 \item Kelvin →RGB (podľa regresného modelu)
@@ -162,15 +223,30 @@ Effective range: 0~88000Lux
 \item PWM driver 8-bit OUT
 \end{enumerate}
 
-\subsubsection{Firmvér tasky}
+\newpage
+\section{Opis implementácie}
+% Firmvér v ESP-IDF
+% Softvér pre Android smartfón
+
+\begin{figure}
+\includegraphics[width=\textwidth]{assets/prototype.jpg}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{assets/pir-motion-detect.png}
+\end{figure}
+
+\subsection{Nastavenie farby a intenzity svietidla}
+
+\subsection{Firmvér tasky}
 
 % ESP-IDF - C kód a drivers 
 % Android studio  (link na dokumentáciu)
 
-\subsubsection{Mobilná aplikácia}
+\subsection{Mobilná aplikácia}
 Obrazovka a popis fungovania
 
-\subsection{Otestovanie riešenia}
+\section{Otestovanie riešenia}
 % Testovacie scenáre - Akceptačné testy
 
 % - 
@@ -178,7 +254,6 @@ Obrazovka a popis fungovania
 \section{Zhodnotenie výsledkov}
 
 \printbibliography[title={Literatúra}]
-\url{https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html}
 \newpage
 
 \section{Technická dokumentácia}
