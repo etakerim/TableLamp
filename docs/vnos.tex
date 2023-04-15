@@ -11,6 +11,7 @@
 \usepackage{graphicx}
 \usepackage{csquotes}
 \usepackage{longtable}
+\usepackage{placeins}
 \usepackage{pdfpages}
 \usepackage{expl3}
 
@@ -148,11 +149,128 @@ Na detekciu pohybu ľudí sa používajú infračervené PIR senzory líšiace s
 \subsubsection{Senzor okolitého osvetlenia}
 Modul senzora osvetlenia Waveshare WS-17146 (Obr.~\ref{fig:light-sensor}) obsahuje obvod TSL25911FN, ktorý samostatne prerátava nameranú intenzitu svetla na fotodióde do luxov s použím vzorca na aproximáciu ľudského videnia. Senzor pracuje na napätí 3,3~V aj 5~V a komunikuje cez I2C zbernicu do 400 kbit/s na adrese 0x29. Najdôležitejšie registre pre odčítanie aktuálnej hodnoty sú Control (0x01) a ALS Data (0x14 - 0x17) \cite{noauthor_tsl25911_nodate}.
 
+\section{Návrh riešenia}
+V časti návrhu uvažujeme ohľadom zapojenia hardvérových súčiastok z pohľadu napäťových úrovní aj riadiacich signálov v systéme. Spôsob čítania zo sensorov a ovládania ovlyvňujú ovládače adaptérov používané firmvérom a ich vzájomnú koordináciu. Voľba nastavení, ktoré môže používateľ zmeniť je následne potrebné zahrnúť do prototypu obrazovky mobilnej aplikácie.
+
+\subsection{Diagramy zapojenia}
+Vnorený systém inteligentnej stolovej lampy vychádza z \textbf{blokovej schémy} na Obr. \ref{fig:block-diagram}. Zariadenie je napájané z elektrickej siete 230~V AC, ktoré napajací zdroj transformuje na 12~V DC priamo použiteľných pre LED pásik. Mikrokontrolér potrebuje napätie 3,3V~V, ale USB konektor umožňuje pripojenie priamo na 5~V DC získaných z lineárneho regulátora napätia.
+
+Periférie komunikujú s ESP32 cez štandardné digitálne zbernice na napäťovej úrovni 3,3~V: UART pre Bluetooth modul, I2C pre senzor osvetlenia. Intezita LED diód je regulovaná cez tri samostané PWM kanály (pulzne-šírková modulácia) a senzor pohybu je pripojený ako vstup na GPIO pin.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{assets/block-diagram.png}
+	\caption{Blokový diagram vnoreného systému inteligentného svietidla}
+	\label{fig:block-diagram}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{assets/electrical-schematics.png}
+	\caption{Schéma obvodu}
+	\label{fig:electrical}
+\end{figure}
+Na schéme \ref{fig:electrical} je zakreslené zapojenie jednotlivých modulov na piny mikrokontroléra. Piny VCC a GND zo senzorov sú vedené na piny 3,3~V a GND na vývojovej doske ESP32. Bluetooth modul je pripojený priamo na 5~V z L7805. LED pásik už obsahuje rezistory pripojené na kolektory tranzistorov. Bázové rezistory sú zapojené ako prídavné súčiastky.
+\FloatBarrier
+
+\subsection{Mobilná aplikácia}
+Stav a aktuálne vlastnosti lampy sa budú nastavovať cez rozhranie mobilnej aplikácie  určenú na platformu Android. Wireframe rozloženia tlačidiel a textových polí na vpisovanie čísel sa nachádza na Obr. \ref{fig:app-wireframe}.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.28\textwidth]{assets/wireframe.png}
+	\caption{Wireframe mobilnej aplikácie}
+	\label{fig:app-wireframe}
+\end{figure}
+
+Funkcionality aplikácie budú dostupné až po úspešnom naviazaní spojenia s modulom HC-05 cez Bluetooth. Pri pripojení na svietidlo si aplikácia načíta nastavenia uložené na mikrokontroléri do textových polí. Tlačidlo ,,Použiť'' umožní odošlať naraz všetky nastavenia z aplikácie. Na tlačidlách zapnutia svetla a detekcie pohybu, alebo vedľa nich, bude indikovaný aktuálne stav oznamovaný zo zariadenia pri akejkoľvek zmene.
+\FloatBarrier
+
+\subsection{Spínanie svetla}
+Svetlo sa môže v podstate nachádzať len v dvoch stavoch - zapnuté a vypnuté, aj keď charakter emitovaného svetla môže byť odlišný od situácie. Existuje však viacero scenárov na prepnutie stavu pri návrhu ktorých, je dôležité odstrániť konflikty. Nesmie nastať jav, že sa svetlo rozsvieti aktivovaním jedného pravidla a vzápätí sa zhasne uplatnením iného.
+\begin{figure}[h]
+    \centering
+	\includegraphics[width=0.7\textwidth]{assets/light-states.png}
+	\caption{Stavový diagram spínania svietidla}
+	\label{fig:state-diagram-switch}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+	\includegraphics[width=\textwidth]{assets/pir-motion-detect.png}
+	\caption{Zapnutie svietidla pri detekcii pohybu}
+	\label{fig:pir-motion-detect}
+\end{figure}
+
+Pravidlá na prepnutie stavov svetla sú nasledovné (Obr.~\ref{fig:state-diagram-switch}):
+\begin{itemize}
+\item \textbf{Ak je OFF}: Okolité osvelenie musí byť pod nastavenou prahovou úrovňou: lux~$\leq$~threshold, a súčasne bol poslaný dopyt o zapnutie svetla, buď z mobilnej aplikácie alebo od pohybového senzora.
+\item \textbf{Ak je ON}: Mobilná aplikácia poslala dopyt na vypnutie svetla alebo vypršal časovač od posledného dopytu na zapnutie (ten je aktívny vždy keď spustená detekcia pohybu).
+\end{itemize}
+Postup zapnutia svetla pri detekcii pohybu je ilustrovaný na diagrame (Obr.~\ref{fig:pir-motion-detect}).
+
+
+
+
+%TODO
+\section{Opis implementácie}
+% Firmvér v ESP-IDF
+% Softvér pre Android smartfón
+% Formát správ {S/0,M/0,...}
+
+\begin{enumerate}
+\item Kelvin ← Temperature
+\item Kelvin →RGB (podľa regresného modelu)
+\item RGB → HSV
+\item V ←brightness
+\item HSV→ RGB
+\item PWM driver 8-bit OUT
+\end{enumerate}
+
+
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/prototype.jpg}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/prototype-back.jpg}
+\end{subfigure}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{assets/lamp.jpg}
+\end{figure}
+
+\subsection{Nastavenie farby a intenzity svietidla}
+
+\subsection{Firmvér tasky}
+
+% ESP-IDF - C kód a drivers 
+% Android studio  (link na dokumentáciu)
+
+\subsection{Mobilná aplikácia}
+Obrazovka a popis fungovania
+
+\section{Otestovanie riešenia}
+% Testovacie scenáre - Akceptačné testy
+
+% - 
+
+\section{Zhodnotenie výsledkov}
+
+\printbibliography[title={Literatúra}]
+\newpage
+
+\section{Technická dokumentácia}
 \subsection{Prehľad hardvérových súčiastok}
-Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre zhotovenie zariadenia. Cena hardvéru prototypu (jednokusová výroba) je odhadovaná na 55 € na základe nami zvolených dodávateľov.
+Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre zhotovenie zariadenia. Cena hardvéru prototypu (jednokusová výroba) je odhadovaná na 55 \texteuro na základe nami zvolených dodávateľov.
 
 \paragraph{Riadiaca jednotka}
 \begin{itemize}
+\itemsep0pt
 \item ESP32 WeMos Lolin D32 - Mikrokontrolér
 \item HC-05 - Bluetooth modul
 \end{itemize}
@@ -187,76 +305,6 @@ Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre
 \item Vypínač mezišnúrový
 \end{itemize}
 
-\section{Návrh riešenia}
-\begin{figure}
-	\centering
-	\includegraphics[width=\textwidth]{assets/block-diagram.png}
-	\caption{Blokový diagram vnoreného systému}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.8\textwidth]{assets/electrical-schematics.png}
-	\caption{Schéma obvodu}
-\end{figure}
-
-\subsection{Low-fidelity prototyp aplikácie}
-\begin{figure}
-	\centering
-	\includegraphics[width=0.4\textwidth]{assets/wireframe.png}
-	\caption{Wireframe mobilnej aplikácie}
-\end{figure}
-
-\subsection{Spínanie svetla}
-\begin{figure}
-    \centering
-	\includegraphics[width=0.7\textwidth]{assets/light-states.png}
-	\caption{Stavový diagram spínania svietidla}
-\end{figure}
-
-\begin{enumerate}
-\item Kelvin ← Temperature
-\item Kelvin →RGB (podľa regresného modelu)
-\item RGB → HSV
-\item V ←brightness
-\item HSV→ RGB
-\item PWM driver 8-bit OUT
-\end{enumerate}
-
-\newpage
-\section{Opis implementácie}
-% Firmvér v ESP-IDF
-% Softvér pre Android smartfón
-
-\begin{figure}
-\includegraphics[width=\textwidth]{assets/prototype.jpg}
-\end{figure}
-
-\begin{figure}
-\includegraphics[width=\textwidth]{assets/pir-motion-detect.png}
-\end{figure}
-
-\subsection{Nastavenie farby a intenzity svietidla}
-
-\subsection{Firmvér tasky}
-
-% ESP-IDF - C kód a drivers 
-% Android studio  (link na dokumentáciu)
-
-\subsection{Mobilná aplikácia}
-Obrazovka a popis fungovania
-
-\section{Otestovanie riešenia}
-% Testovacie scenáre - Akceptačné testy
-
-% - 
-
-\section{Zhodnotenie výsledkov}
-
-\printbibliography[title={Literatúra}]
-\newpage
-
-\section{Technická dokumentácia}
 % Štruktúra priečinkov
 % Nahratie firmvéru
 % Nahratie softvéru
