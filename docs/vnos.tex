@@ -13,11 +13,31 @@
 \usepackage{longtable}
 \usepackage{placeins}
 \usepackage{pdfpages}
+\usepackage{listings}
 \usepackage{expl3}
 
 % Dots in TOC
 \usepackage{tocloft}
 \renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+\renewcommand{\ttdefault}{pcr}
+\lstdefinestyle{cstyle}{
+    language=C,
+	basicstyle=\linespread{1.1}\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=single,
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    texcl=true,
+	numbersep=8pt,
+	framexleftmargin=15pt,
+	xleftmargin=5ex,
+    xrightmargin=3.4pt,
+	morekeywords = {uint8_t,uint16_t,int16_t,uint32_t,int32_t,bool}
+}
+\renewcommand{\lstlistingname}{Zdrojový kód}
 
 
 \setstretch{1.5}
@@ -71,6 +91,18 @@
 
 \section{Analýza problematiky}
 Zariadenie na ovládanie svietidla sa má skladať z dvoch nezávislých integrovaných častí: riadiaca jednotka s firmvérom priamo regulujúca spínanie lampy podľa senzorov, a mobilná aplikácia na zmenu aktívnych nastavení svetla a detekcie pohybu komunikujúca cez Bluetooth. V sekcii popíšeme výber vhodných súčiastok a základné princíp fungovania.
+
+\subsection{Špecifikácia požiadaviek}
+Zo zadania vyplýva niekoľko funkionálnych požiadaviek na systém:
+\begin{itemize}
+\itemsep0pt
+\item Svetidlo rovnomerne osvetlí celý povrh pracovného stola.
+\item Svietidlo sa zapne pri slabom osvetlení a súčasne detekcii pohybu v miestnosti.
+\item Používateľ je schopný cez mobilnú aplikáciu vypnúť/zapnúť svetlo, nastaviť farebnú teplotu, jas a prahovú úroveň pre slabé osvetlenie.
+\item Medzi zapnutiami zariadenia sa zachovajú zvolené používateľské nastavenia svietidla. 
+\item Vnorený systém kontroléra svetla je postavený na platfome mikrokontroléra ESP32.
+\item Mobilná aplikácia je určená na platformu Android a komunikuje so zariadením cez Bluetooth.
+\end{itemize}
 
 \subsection{Riadiaca jednotka}
 Mikrokontrolér \textbf{ESP32 WeMos Lolin D32} (Obr.~\ref{fig:esp32}) sme zvolili spomedzi ostatných bežne dostupných vývojových dosiek (ako sú Arduino, Raspeberry Pi, STM32, BeagleBone a pod.) hlavne pre podporu pre viacerých štandardných mikroprocesorových rozhraní na rozličných pinoch. Doska je postavená na module \emph{ESP32-WROOM-32} \cite{noauthor_esp32-wroom-32_2023}, ktorý disponuje procesorom s frekvenciou 80 MHz (až do 240 MHz) a pamäťou 4 MB Flash a 520 kB SRAM prilíš nelimitujúce rozhodnutia na účely prototypu. 
@@ -150,18 +182,19 @@ Na detekciu pohybu ľudí sa používajú infračervené PIR senzory líšiace s
 Modul senzora osvetlenia Waveshare WS-17146 (Obr.~\ref{fig:light-sensor}) obsahuje obvod TSL25911FN, ktorý samostatne prerátava nameranú intenzitu svetla na fotodióde do luxov s použím vzorca na aproximáciu ľudského videnia. Senzor pracuje na napätí 3,3~V aj 5~V a komunikuje cez I2C zbernicu do 400 kbit/s na adrese 0x29. Najdôležitejšie registre pre odčítanie aktuálnej hodnoty sú Control (0x01) a ALS Data (0x14 - 0x17) \cite{noauthor_tsl25911_nodate}.
 
 \section{Návrh riešenia}
-V časti návrhu uvažujeme ohľadom zapojenia hardvérových súčiastok z pohľadu napäťových úrovní aj riadiacich signálov v systéme. Spôsob čítania zo sensorov a ovládania ovlyvňujú ovládače adaptérov používané firmvérom a ich vzájomnú koordináciu. Voľba nastavení, ktoré môže používateľ zmeniť je následne potrebné zahrnúť do prototypu obrazovky mobilnej aplikácie.
+V časti návrhu uvažujeme ohľadom zapojenia hardvérových súčiastok z pohľadu napäťových úrovní aj riadiacich signálov v systéme. Spôsob čítania zo senzorov a ovládania ovlyvňujú ovládače adaptérov používané firmvérom a ich vzájomnú koordináciu. Voľba nastavení, ktoré môže používateľ zmeniť je následne potrebné zahrnúť do prototypu obrazovky mobilnej aplikácie.
 
 \subsection{Diagramy zapojenia}
 Vnorený systém inteligentnej stolovej lampy vychádza z \textbf{blokovej schémy} na Obr. \ref{fig:block-diagram}. Zariadenie je napájané z elektrickej siete 230~V AC, ktoré napajací zdroj transformuje na 12~V DC priamo použiteľných pre LED pásik. Mikrokontrolér potrebuje napätie 3,3V~V, ale USB konektor umožňuje pripojenie priamo na 5~V DC získaných z lineárneho regulátora napätia.
 
-Periférie komunikujú s ESP32 cez štandardné digitálne zbernice na napäťovej úrovni 3,3~V: UART pre Bluetooth modul, I2C pre senzor osvetlenia. Intezita LED diód je regulovaná cez tri samostané PWM kanály (pulzne-šírková modulácia) a senzor pohybu je pripojený ako vstup na GPIO pin.
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=\textwidth]{assets/block-diagram.png}
 	\caption{Blokový diagram vnoreného systému inteligentného svietidla}
 	\label{fig:block-diagram}
 \end{figure}
+
+Periférie komunikujú s ESP32 cez štandardné digitálne zbernice na napäťovej úrovni 3,3~V: UART pre Bluetooth modul, I2C pre senzor osvetlenia. Intezita LED diód je regulovaná cez tri samostané PWM kanály (pulzne-šírková modulácia) a senzor pohybu je pripojený ako vstup na GPIO pin.
 
 \begin{figure}[h]
 	\centering
@@ -207,25 +240,17 @@ Pravidlá na prepnutie stavov svetla sú nasledovné (Obr.~\ref{fig:state-diagra
 \end{itemize}
 Postup zapnutia svetla pri detekcii pohybu je ilustrovaný na diagrame (Obr.~\ref{fig:pir-motion-detect}).
 
-
-
-
-%TODO
-\section{Opis implementácie}
-% Firmvér v ESP-IDF
-% Softvér pre Android smartfón
-% Formát správ {S/0,M/0,...}
-
+Okrem rozhodnutia na pokyn zapnutia LED pásika sa želaná farebná teplota a jas lampy musí prepočítať na striedu pulzno-šírkovej modulácie pre zložky farby v RGB:
 \begin{enumerate}
-\item Kelvin ← Temperature
-\item Kelvin →RGB (podľa regresného modelu)
-\item RGB → HSV
-\item V ←brightness
-\item HSV→ RGB
-\item PWM driver 8-bit OUT
+\item \textbf{\emph{Farebná teplota [K]} → RGB}: prevod podľa algoritmu využívajúceho aproximáciu závislosti cez lineárnu regresiu medzi farebnou teplotou a energiou vyžiarenou čiernym telesom v danom farebnom kanály podľa CIE 1964 colour-matching funkcie. Regresný model využívaný algorimom je dostatočne presný s $R^2$ nad 0,987~\cite{helland_how_2012}.
+\item \textbf{RGB → HSV}: konverzia na model HSV pre úpravu jasu výslednej farby svetla
+\item \textbf{V ← \emph{Jas [lux]}}
+\item\textbf{HSV→ RGB}
+\item \textbf{PWM driver 8-bit výstup}: PWM kontrolér má nastavené rozlíšenie presne na 8 bitov, čiže RGB trojica môže byť priamo nastavená do registra striedy výstupných kanálov.
 \end{enumerate}
 
-
+\section{Opis implementácie}
+\textbf{Hardvérové súčiastky} vnoreného systému sú osadené na univerzálnom plošnom spoji (Obr.~\ref{fig:pcb}). Keďže sa jedná o prototyp sú komponenty podľa možností pripojené cez nespájkované prepojovacie kábliky alebo konektory, aby mohli byť jednoducho vymenené v prípade potreby. Na testovacie účely z dôvodu skladnosti bol využívaný jeden úsek LED pásiku, ale v prevádzke sa nahradí metrovou hliníkovou lištou s matným krytom (Obr.~\ref{fig:lamp-full}). Lišta bude prilepená obojstrannou páskou na poličku nad stolom.
 
 \begin{figure}[h]
 \centering
@@ -238,30 +263,212 @@ Postup zapnutia svetla pri detekcii pohybu je ilustrovaný na diagrame (Obr.~\re
 	\centering
 	\includegraphics[width=\textwidth]{assets/prototype-back.jpg}
 \end{subfigure}
+\caption{Plošný spoj kontroléra inteligentného svietidla}
+\label{fig:pcb}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\textwidth]{assets/lamp.jpg}
+\caption{LED pásik namontovaný do metrovej hliníkovej lišty}
+\label{fig:lamp-full}
 \end{figure}
 
-\subsection{Nastavenie farby a intenzity svietidla}
 
-\subsection{Firmvér tasky}
+\textbf{Fimvér} pre zariadenie kontroléra LED pásika na ESP32 je napísaný v jazyku C za použitia SDK \textbf{ESP-IDF} (Espressif IoT Development Framework) vo verzii 5.0 \cite{noauthor_esp-idf_nodate}. Ako vývojové prostredie sme použili \emph{Visual Studio Code} a na zostavovanie a flashovanie programu slúži nástroj príkazového riadku \emph{idf.py}. 
 
-% ESP-IDF - C kód a drivers 
-% Android studio  (link na dokumentáciu)
+Obsluhu činností ako sú napr. príjem príkazov cez Bluetooth alebo obsluha prerušenia od detektora pohybu zabezpečujú úlohy operačného systému \emph{FreeRTOS}. Ovládače na bežné periférie ako sú: GPIO, PWM, Timer, UART, I2C, Non-volatile storage pochádzajú z SDK. Driver pre sensor osvetlenia od výrobcu pre vývojový platformu Arduino IDE je prepísaný a prispôsobený ku ESP-IDF.
 
-\subsection{Mobilná aplikácia}
-Obrazovka a popis fungovania
+\begin{lstlisting}[style=cstyle,caption=Štruktúra vlastností svietidla,label={lst:light-settings}]
+typedef struct {
+    bool status;
+    bool movement;
+    uint8_t brightness;
+    uint16_t temperature;
+    uint16_t threshold;
+} Light;
+\end{lstlisting}
+Aktívny stav svietidla je uložený v štruktúre \verb|Light|, z ktorej existuje jedna globálna inštancia a prístup k nej je obmedzený
+mutexom.
+
+V hlavnom programe sa najprv načítajú nastavenia svetidla od posledného vypnutia z nevolatilnej pamäte. Hoc by tento krok zlyhal použijú sa predvolené parametre (továrenské nastavenia). Ďalej sa nastaví interval pre časovač PIR senzora a obsluha prerušenia pri dosiahnutí času alarmu \emph{switch\_isr\_handler}, ktorá dokáže notifikovať úlohu na vypnutie svetla \emph{light\_switch\_task}. 
+
+Z periférii je potrebné nastaviť zbernice pre komunikáciu so senzorom osvetlenia, Bluetooth modulom a nakoniec sa LED diódy uvedú do stavu podľa načítaných nastavení. Systém spúšťa tri úlohy, ktoré prevažne blokujú pri čakaní na udalosti, buď na požiadavku o zmenu stavu svetla alebo o asynchrónny príjem príkazov na UART zbernici.
+
+\begin{lstlisting}[style=cstyle,caption=Inicializácia hardvéru a spustenie úloh,label={lst:firmware-main},
+ morekeywords={xTaskCreate,xSemaphoreCreateMutex,timer_on_alarm,switch_isr_handler,light_switch_task,receive_commands_task}]
+void app_main(void)
+{
+    light_mutex = xSemaphoreCreateMutex();
+    lux_sensor_mutex = xSemaphoreCreateMutex();
+
+    nvs_config();  
+    nvs_load(&light);
+    timer_setup(&timer, PIR_TIMEOUT_S, timer_on_alarm);
+    pir_sensor_config(switch_isr_handler);
+    i2c_config(); 
+    light_sensor_config();
+    bluetooth_config();
+
+	led_config();
+    movement_detection(light.movement, timer,  timer_on_alarm, switch_isr_handler);
+    uint16_t lux = illuminance_level();
+    lamp_scene(lux);  
+
+    xTaskCreate(light_switch_task, "detect_movement", 2048, (void *)true, 1, &gpio_task);
+    xTaskCreate(light_switch_task, "timeout_light", 2048, (void *)false, 1, &timer_task);
+    xTaskCreate(receive_commands_task, "receive_commands", 4096, NULL, 10, NULL);
+}
+\end{lstlisting}
+
+\textbf{Softvér mobilnej aplikácie} je impementovaný v jazyku Kotlin vo vývojovom prostredí Android Studio v2022.1.1. Aplikácia podporuje ADK minimálne verzie 24, ale je zostavená a odtestovaná výhradne na smartfóne Motorola Moto E6 Plus s Android 9. Dizajn obrazovky je realizovaný podľa návrhu (Obr. \ref{fig:mobile-app}). Pri spustení akejkoľvek akcie sa overuje otvorené spojenie so svietidlom a pokiaľ je dočasne nedostupné dialógové okno zablokuje činnosť pre používateľa a snaží sa obnoviť Bluetooth pripojenie.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/mobile-app.png}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{assets/mobile-app-connect.png}
+\end{subfigure}
+\caption{Obrazovka mobilnej aplikácie}
+\label{fig:mobile-app}
+\end{figure}
+
 
 \section{Otestovanie riešenia}
-% Testovacie scenáre - Akceptačné testy
+Z dôvodu integrácie viacerých prvkov a konečnej použiteľnosti sme systém odtestovali cez \textbf{akceptačné testy}, ktoré definujú očakávané správanie z pohľadu používateľa. Vnorený systém prešiel všetkými uvedenými testami.
+\vspace{1em}
 
-% - 
+\subsection{Test: Opakované nadväzovanie Bluetooth spojenia}
+\noindent\textbf{Vstupné podmienky:} Mobilná aplikácia ani lampa nie sú spustené. Bluetooth na smartfóne je vypnuté, ale HC-05 je už spárované. \\
+\textbf{Výstupné podmienky:} Mobilná aplikácia zobrazuje nastavenia svetla. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ otvorí aplikáciu s názvom ,,Stolové osvetlenie'' na svojom Android smatfóne 
+\item Aplikácia sa otvorí a otvorí dialógové okno s vyžiadaním povolenia na aktivovanie Bluetooth
+\item Používateľ stlačí tlačidlo ,,Povoliť''
+\item Aplikácia vypíše v dialǵovom okne ,,Zapína sa rozhranie Bluetooth ...'', následne sa v smarfóne aktivuje Bluetooth
+a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu ...'' a neumožňuje zrušenie dialógového okna.
+\item Používateľ pripojí lampu do elektrickej zásuvky a prepne prepínač lampy do polohy zapnuté.
+\item Aplikácia maximálne do 15 sekúnd zatvorí dialógové okno a placeholders (vyšedené písmo) v textových poliach zmení za skutočné hodnoty (nevyšedené písmo).
+\item Používateľ prepne prepínač lampy do polohy vypnuté a v mobilnej aplikácii klikne na ľubovoľné tlačidlo.
+\item Aplikácie vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu ...'' a neumožňuje zrušenie dialógového okna.
+\item Používateľ prepne prepínač lampy do polohy zapnuté.
+\item Aplikácia znova maximálne do 15 sekúnd zatvorí dialógové okno a placeholders (vyšedené písmo) v textových poliach zmení za skutočné hodnoty (nevyšedené písmo).
+\end{enumerate}
+
+\subsection{Test: Aktívna detekcia pohybu}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia je úplne zatmavený. Detekcia pohybu je podľa prepínača v aplikácii vypnutá. Svetlo je vypnuté, aj podľa tlačidla v aplikácii, aj fyzicky. \\
+\textbf{Výstupné podmienky:} Svetlo je vypnuté, aj podľa tlačidla v aplikácii, aj fyzicky. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ stačí v aplikácii prepínač na zapnutie detekcie pohybu.
+\item Aplikácia indikuje zmenou stavu stavu prepínača v aplikácii, že detekcia pohybu je zapnutá.
+\item Používateľ pohne rukou vo vzdialenosti 1 m na priamu viditeľnosť od stredu šošovky PIR senzora.
+\item Svetlo sa zapne, aj podľa tlačidla v aplikácii, aj fyzicky.
+\item Používateľ počká bez akéhokoľvek okolitého pohybu po interval nastavený vo fimvéri, predvolene 20 s.
+\item Svetlo sa po 20 s samočinne vypne, aj podľa tlačidla v aplikácii, aj fyzicky.
+\end{enumerate}
+
+\subsection{Test: Deaktivovaná detekcia pohybu}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia je úplne zatmavený. Detekcia pohybu je podľa prepínača v aplikácii vypnutá. Svetlo je vypnuté. \\
+\textbf{Výstupné podmienky:} Svetlo je vypnuté, aj podľa tlačidla v aplikácii, aj fyzicky. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ pohne rukou vo vzdialenosti 1 m na priamu viditeľnosť od stredu šošovky PIR senzora.
+\item Svetlo zostane vypnuté.
+\end{enumerate}
+
+\subsection{Test: Manuálne zapnutie a vypnutie svetla}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia je úplne zatmavený. Detekcia pohybu je podľa prepínača v aplikácii zapnutá, jas je 100\%. Svetlo je vypnuté, aj podľa tlačidla v aplikácii, aj fyzicky. \\
+\textbf{Výstupné podmienky:} Svetlo je vypnuté, aj podľa tlačidla v aplikácii, aj fyzicky. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ stačí v aplikácii prepínač na vypnutie detekcie pohybu.
+\item Aplikácia indikuje zmenou stavu stavu prepínača v aplikácii, že detekcia pohybu je vypnutá.
+\item Používateľ stačí v aplikácii tlačidlo ,,Vypnuté''.
+\item Svetlo sa zapne, aj podľa tlačidla v aplikácii, aj fyzicky.
+\item Používateľ počká po interval nastavený vo fimvéri, predvolene min. 20 s.
+\item Svetlo zostane zapnuté, aj po 30 s.
+\item Používateľ stačí v aplikácii tlačidlo ,,Zapnuté''.
+\item Svetlo je vypnuté.
+\end{enumerate}
+
+\subsection{Test: Zmena farebnej teploty svetla}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia je úplne zatmavený. Svetlo je vypnuté, detekcia pohybu je vypnutá, jas je 100~\%, farebná teplota je 3000~K. \\
+\textbf{Výstupné podmienky:} Svetlo je zapnuté a svieti jasným bielym svetlom. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ zadá do textového poľa ,,Farebná teplota'' hodnotu ,,1000'' a stlačí tlačidlo ,,Použiť''.
+\item Aplikácia akceptuje vstup a odošle farebnú teplotu cez Bluetooth na lampu.
+\item Používateľ stačí v aplikácii tlačidlo ,,Vypnuté''.
+\item Svetlo sa zapne a sveti oranžovou farbou.
+\item Používateľ zadá do textového poľa ,,Farebná teplota'' hodnotu ,,5000'' a stlačí tlačidlo ,,Použiť''.
+\item Aplikácia akceptuje vstup a svetlo zmení farbu na bielu.
+\end{enumerate}
+
+\subsection{Test: Zmena jasu svetla}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia je úplne zatmavený. Svetlo je vypnuté, detekcia pohybu je vypnutá, jas je 100\%, farebná teplota je 3000~K. \\
+\textbf{Výstupné podmienky:} Svetlo je zapnuté a svieti jasným bielym svetlom. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ zadá do textového poľa ,,Maximálny jas'' hodnotu ,,10'' a stlačí tlačidlo ,,Použiť''.
+\item Aplikácia akceptuje vstup a odošle jas cez Bluetooth na lampu.
+\item Používateľ stačí v aplikácii tlačidlo ,,Vypnuté''.
+\item Svetlo sa zapne a sveti bielou farbou slabej intenzity.
+\item Používateľ zadá do textového poľa ,,Maximálny jas'' hodnotu ,,0''' a stlačí tlačidlo ,,Použiť''.
+\item Svetlo je zapnuté, ale nesvieti.
+\item Používateľ zadá do textového poľa ,,Maximálny jas'' hodnotu ,,100''' a stlačí tlačidlo ,,Použiť''.
+\item Svetlo sveti bielou farbou silnej intenzity.
+\end{enumerate}
+
+\subsection{Test: Reakcia svetla na okolité osvetlenie}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia odokrytý a zo vzdialenosti 10 cm svieti naň ,,Baterka'' zo smartfónu. Svetlo je vypnuté, detekcia pohybu je vypnutá, intenzita je 100\%.
+\textbf{Výstupné podmienky:} Svetlo je zapnuté. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ zadá do textového poľa ,,Prah osvetlenia'' hodnotu ,,10'' a stlačí tlačidlo ,,Použiť''.
+\item Aplikácia akceptuje vstup a odošle prahovú hodnotu cez Bluetooth na lampu.
+\item Používateľ stačí v aplikácii tlačidlo ,,Vypnuté'', to zmení nápis na ,,Zapnuté''.
+\item Svetlo sa nezapne a text tlačidla sa vráti naspäť na ,,Vypnuté''
+\item Senzor osvetlenia je zatmavený a prestane naň svietiť ,,Baterka''. Používateľ stačí v aplikácii tlačidlo ,,Vypnuté'', to zmení nápis na ,,Zapnuté''.
+\item Svetlo sa zapne.
+\end{enumerate}
+
+\subsection{Test: Načítanie pôvodných nastavení po zapnutí}
+\noindent\textbf{Vstupné podmienky:} Bluetooth spojenie aplikácie a lampy je nadviazané. Senzor osvetlenia je úplne zatmavený. Svetlo je zapnuté, detekcia pohybu je vypnutá.
+\textbf{Výstupné podmienky:} Svetlo je vypnuté, detekcia pohybu je vypnutá, jas je 100\%, farebná teplota je 5000 K, prah je 1000. \\
+\textbf{Postup:}
+\begin{enumerate}
+\itemsep0pt
+\item Používateľ zadá do textového polí hodnoty: ,Farebná teplota'' = ,,5000'', ,,Maximálny jas'' = ,,100'',  ,,Prah osvetlenia'' = ,,1000'' a stlačí tlačidlo ,,Použiť''.
+\item Aplikácia akceptuje vstup a odošle hodnoty cez Bluetooth na lampu.
+\item Svetlo sa bude mať vlastnosti podľa zmenených nastavení.
+\item Používateľ stačí v aplikácii tlačidlo ,,Zapnuté'', to zmení nápis na ,,Vypnuté''.
+\item Svetlo sa vypne.
+\item Používateľ prepne prepínač lampy do polohy vypnuté a zatvorí mobilnú aplikáciu, počká na zhasnutie indikačnej ledky na MCU.
+\item Používateľ prepne prepínač lampy do polohy zapnuté a otvorí mobilnú aplikáciu.
+\item Aplikácia sa pripojí na lampu cez Bluetooth a načíta posledné uložené nastavenia. 
+\item Používateľ stačí v aplikácii tlačidlo ,,Vypnuté''.
+\item Fyzické vlastnosti svetla budú rovanké ako pred vypnutím.
+\end{enumerate}
 
 \section{Zhodnotenie výsledkov}
+%TODO
+Podľa požiadaviek zo zadania 
 
-\printbibliography[title={Literatúra}]
+
+\printbibliography[title={Zoznam použitej literatúry}]
 \newpage
 
 \section{Technická dokumentácia}
@@ -305,9 +512,35 @@ Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre
 \item Vypínač mezišnúrový
 \end{itemize}
 
-% Štruktúra priečinkov
-% Nahratie firmvéru
-% Nahratie softvéru
-% FW a SW: Moduly a funkcie
+\subsection{Zdrojové súbory pre firmvér}
+Implemenácia firmvéru sa nachádza v priečinku \emph{esp}. Na nahratie firmvéru na MCU je potrebné mať stiahnuté a nainštalované ESP-IDF s požadanými systémovými závislosťami podľa dokumentácie. Potom vykonáme v priečinku \emph{esp} tieto príkazy:
+\begin{verbatim}
+source /path/to/esp-idf/export.sh
+idf.py build
+idf.py -p /dev/ttyUSB0 flash
+\end{verbatim}
+
+Firmvér je rozdelený do viacerých súborov zdrojového kódu obsahujúce popísanú funkcionalitu:
+\begin{itemize}
+\itemsep0pt
+\item \textbf{main.c} - Hlavný program, úlohy a obsluhy prerušení.
+\item \textbf{storage.c} - Načítanie a zapís nastavení svetla z/do nevolatilnej pamäte.
+\item \textbf{trigger.c} - Nastavenie časovača a prerušení po timeout a pri detekcii pohybu.
+\item \textbf{i2c.c} - Zjednodušenie rozhrania pre komunikáciu cez I2C zbernicu.
+\item \textbf{lightsensor.c} - Ovládač pre senzor osvetlenia. Externe prístupné sú iba funkcie \emph{light\_sensor\_config()}, \emph{light\_sensor\_read\_lux()}
+\item \textbf{bluetooth.c} - Inicializácia UART linky na príslušných pinoch \emph{bluetooth\_config()}, parsovanie príkazov v prijatej správe na ovládanie svetla \emph{parse\_commands()} a odoslanie aktuálneho stavu lampy \emph{bluetooth\_send\_status()}
+\item \textbf{led.c} - Konfigurácia PWM kanálov \emph{led\_config()} a nastavenie LED diód podľa rôznych parametrov, buď cez priamo požadovanú RGB farbu \emph{led\_set\_color()} alebo s prepočtom z farby a jasu  \emph{led\_output()}.
+\end{itemize}
+
+\subsection{Zdrojové súbory pre Android aplikáciu}
+%TODO
+
+\subsection{Syntax Bluetooth príkazov}
+
+%TODO
+% Formát správ {S/%d,M/%d,K/%d,B/%d,L/%d}
+% REQ, SWITCH, DETECT,LUX, KELVIN, LEVEL
+
+% Nahratie softvéru Android
 
 \end{document}
