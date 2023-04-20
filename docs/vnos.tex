@@ -90,7 +90,7 @@
 \setcounter{page}{1}
 
 \section{Analýza problematiky}
-Zariadenie na ovládanie svietidla sa má skladať z dvoch nezávislých integrovaných častí: riadiaca jednotka s firmvérom priamo regulujúca spínanie lampy podľa senzorov, a mobilná aplikácia na zmenu aktívnych nastavení svetla a detekcie pohybu komunikujúca cez Bluetooth. V sekcii popíšeme výber vhodných súčiastok a základné princíp fungovania.
+Zariadenie na ovládanie svietidla sa má skladať z dvoch nezávislých integrovaných častí: riadiaca jednotka s firmvérom priamo regulujúca spínanie lampy podľa senzorov, a mobilná aplikácia na zmenu aktívnych nastavení svetla a detekcie pohybu komunikujúca cez Bluetooth. V sekcii popíšeme výber vhodných súčiastok a základné princípy ich fungovania.
 
 \subsection{Špecifikácia požiadaviek}
 Zo zadania vyplýva niekoľko funkionálnych požiadaviek na systém:
@@ -105,9 +105,9 @@ Zo zadania vyplýva niekoľko funkionálnych požiadaviek na systém:
 \end{itemize}
 
 \subsection{Riadiaca jednotka}
-Mikrokontrolér \textbf{ESP32 WeMos Lolin D32} (Obr.~\ref{fig:esp32}) sme zvolili spomedzi ostatných bežne dostupných vývojových dosiek (ako sú Arduino, Raspeberry Pi, STM32, BeagleBone a pod.) hlavne pre podporu pre viacerých štandardných mikroprocesorových rozhraní na rozličných pinoch. Doska je postavená na module \emph{ESP32-WROOM-32} \cite{noauthor_esp32-wroom-32_2023}, ktorý disponuje procesorom s frekvenciou 80 MHz (až do 240 MHz) a pamäťou 4 MB Flash a 520 kB SRAM prilíš nelimitujúce rozhodnutia na účely prototypu. 
+Mikrokontrolér \textbf{ESP32 WeMos Lolin D32} (Obr.~\ref{fig:esp32}) sme zvolili spomedzi ostatných bežne dostupných vývojových dosiek (ako sú Arduino, Raspeberry Pi, STM32, BeagleBone a pod.) hlavne pre podporu pre viacerých štandardných mikroprocesorových rozhraní na rozličných pinoch. Doska je postavená na module \emph{ESP32-WROOM-32} \cite{noauthor_esp32-wroom-32_2023}, ktorý disponuje procesorom s frekvenciou 80~MHz (až do 240~MHz) a pamäťou 4~MB Flash a 520~kB SRAM prilíš nelimitujúce rozhodnutia na účely prototypu. 
 
-Napájacie napätie dosky je 3,3 V, ale cez USB konektor môžeme pripojiť zdroj 5 V. ESP-32 sa vyznačuje aj dobrou podporou od výrobcu v podobe SDK obsahujúce ovládače na všetky dostupné rozhrania pre periférie ESP-IDF \cite{noauthor_esp-idf_nodate}, ktorý tiež zahŕňa operačný systém reálneho času FreeRTOS.
+Napájacie napätie dosky je 3,3~V, ale cez USB konektor môžeme pripojiť zdroj 5~V. ESP32 sa vyznačuje aj dobrou podporou od výrobcu v podobe SDK obsahujúce ovládače na všetky dostupné rozhrania pre periférie ESP-IDF \cite{noauthor_esp-idf_nodate}, ktorý tiež zahŕňa operačný systém reálneho času FreeRTOS.
 
 \begin{figure}[h]
 	\centering
@@ -116,7 +116,7 @@ Napájacie napätie dosky je 3,3 V, ale cez USB konektor môžeme pripojiť zdro
 	\label{fig:esp32}
 \end{figure}
 
-ESP-32 síce disponuje konektivitou na WiFi a Bluetooth, ale funkcie pre RFCOMM nie sú zatiaľ implementované, preto sa Bluetooth komunikácia musí realizovať externým \textbf{modulom HC-05} (Obr.~\ref{fig:hc-05}). Posielanie a príjem správ sa uskutočnuje cez \emph{UART} protokol, kde piny RXD a TXD musia byť na napäťových úroviach 3,3 V, zatiaľ čo napájanie je v rozmedzí 3,6 - 6 V (zväčša 5 V). Baudová rýchlosť je predvolene určená na 9600. 
+ESP32 síce disponuje konektivitou na WiFi a Bluetooth, ale funkcie pre RFCOMM nie sú zatiaľ implementované, preto sa Bluetooth komunikácia musí realizovať externým \textbf{modulom HC-05} (Obr.~\ref{fig:hc-05}). Posielanie a príjem správ sa uskutočnuje cez \emph{UART} protokol, kde piny RXD a TXD musia byť na napäťových úroviach 3,3 V, zatiaľ čo napájanie je v rozmedzí 3,6 - 6 V (zväčša 5 V). Baudová rýchlosť je predvolene určená na 9600. 
 
 Pin Enable slúži na prepnutie modulu do AT príkazového režimu (high úroveň), v ktorom je možné upraviť napr. baud. Pin State signalizuje stav Bluetooth pripojenia a je zároveň zapojený na indikačnú LED, ktorá sa môže nachádzať v 3 stavoch: (i) bliknutie raz za 2 sekundy - príkazový režim, (ii) bliknutie 2-krát za 1 sekundu - pripojenie nadviazané, (iii) opakované blikanie - čakanie na pripojenie \cite{noauthor_hc-05_nodate}.
 
@@ -153,9 +153,9 @@ Rozlišujeme pásiky podľa technológie produkcie teplotného odtieňu: jednofa
 \caption{Akčné členy svietidla}
 \end{figure}
 
-Vhodný kandidát na interiérové osvetlenie stola sa ukazuje \textbf{RGB LED pásik} (Obr.~\ref{fig:rgb-led}) so samolepiacou fóliou 3M 300LSE bez krytia IP20, napätím zdroja 12~V, príkonom 14,4~W/m a hustotou diód 60~ks/m, ktorý vyprodukuje až 550~lm/m svetla \cite{123ledsk_rgb_nodate}. LED diódy na pásiku sú zapojenie tri do série so spoločnou anódou v 10 cm oddeliteľných úsekoch. Vetva pre červenú farbu má navyše zapojený do série 300~$\Omega$ SMD rezistor, ostatné vetvy 150~$\Omega$ rezistor.
+Vhodný kandidát na interiérové osvetlenie stola sa ukazuje \textbf{RGB LED pásik} (Obr.~\ref{fig:rgb-led}) so samolepiacou fóliou 3M 300LSE bez krytia IP20, napätím zdroja 12~V, príkonom 14,4~W/m a hustotou diód 60~ks/m, ktorý vyprodukuje až 550~lm/m svetla \cite{123ledsk_rgb_nodate}. LED diódy na pásiku sú zapojenie tri do série so spoločnou anódou v 10 cm oddeliteľných úsekoch. Vetva pre červenú farbu má navyše zapojený do série 300~$\Omega$ SMD rezistor, ostatné vetvy majú zapojené 150~$\Omega$ rezistor.
 
-Jednotlivé farebných kanálov nemôžeme spínať a regulať priamo s pinu mikroprocesoru, pretože nie je prítomné rovnaké napätie: 3,3~V voči 12~V, a nepostačuje ani maximálny prúd $I_{OL}$ = 28 mA. Dedikovaný tranzistor bude spínať prúd do 1,2 A ($I = 14,4W / 12V$), preto potrebujeme výkonovejšie tranzistory ako bežne používaný rad BC ($I_C < 100 mA$). \textbf{NPN tranzistor BD711} (Obr.~\ref{fig:bd-711}) dokáže spínať prúd až do 12 A \cite{noauthor_bd711_nodate}.
+Jednotlivé farebné kanály nemôžeme spínať a regulať priamo s pinu mikroprocesoru, pretože nie je prítomné rovnaké napätie: 3,3~V voči 12~V, a nepostačuje ani maximálny prúd $I_{OL}$ = 28 mA. Dedikovaný tranzistor bude spínať prúd do 1,2 A ($I = 14,4W / 12V$), preto potrebujeme výkonovejšie tranzistory než z bežne používaného radu BC ($I_C < 100 mA$). \textbf{NPN tranzistor BD711} (Obr.~\ref{fig:bd-711}) dokáže spínať prúd až do 12 A \cite{noauthor_bd711_nodate}.
 
 \begin{figure}[h]
 \centering
@@ -176,16 +176,16 @@ Jednotlivé farebných kanálov nemôžeme spínať a regulať priamo s pinu mik
 \end{figure}
 
 \subsubsection{PIR pohybový senzor}
-Na detekciu pohybu ľudí sa používajú infračervené PIR senzory líšiace sa veľkosťou, citlivosťou a nastaviteľnosťou úrovne detektora. Zlepšenie snímacích vlastností je docielené plastovou Fresnelovou šošovkou na senzore. \textbf{Olimex SB312} (Obr.~\ref{fig:pir})sa vyzančuje kompaktnosťou s rozmermi PCB: 10 x 8 mm. Disponuje uhlom snímacieho kužela do 100° s dosahom 3 - 5 metrov. Oneskorenie výstupu voči detegovanému pohybu je 2 sekundy a po rovank dlhý čas podrží výstupnú logickú úroveň v jednotke. Napájacie napätie senzora je 3,3~V \cite{olimex_pir-sb312_nodate}.
+Na detekciu pohybu ľudí sa používajú infračervené PIR senzory líšiace sa veľkosťou, citlivosťou a nastaviteľnosťou úrovne detektora. Zlepšenie snímacích vlastností je docielené plastovou Fresnelovou šošovkou na senzore. \textbf{Olimex SB312} (Obr.~\ref{fig:pir})sa vyznačuje kompaktnosťou s rozmermi PCB: 10 x 8 mm. Disponuje uhlom snímacieho kužela do 100° s dosahom 3 - 5 metrov. Oneskorenie výstupu voči detegovanému pohybu je 2 sekundy a po rovanko dlhý čas podrží výstupnú logickú úroveň v jednotke. Napájacie napätie senzora je 3,3~V \cite{olimex_pir-sb312_nodate}.
 
 \subsubsection{Senzor okolitého osvetlenia}
-Modul senzora osvetlenia Waveshare WS-17146 (Obr.~\ref{fig:light-sensor}) obsahuje obvod TSL25911FN, ktorý samostatne prerátava nameranú intenzitu svetla na fotodióde do luxov s použím vzorca na aproximáciu ľudského videnia. Senzor pracuje na napätí 3,3~V aj 5~V a komunikuje cez I2C zbernicu do 400 kbit/s na adrese 0x29. Najdôležitejšie registre pre odčítanie aktuálnej hodnoty sú Control (0x01) a ALS Data (0x14 - 0x17) \cite{noauthor_tsl25911_nodate}.
+Modul senzora osvetlenia Waveshare WS-17146 (Obr.~\ref{fig:light-sensor}) obsahuje obvod TSL25911FN, ktorý samostatne prerátava nameranú intenzitu svetla na fotodióde do luxov s použitím vzorca na aproximáciu ľudského videnia. Senzor pracuje na napätí 3,3~V aj 5~V a komunikuje cez I2C zbernicu do 400 kbit/s na adrese 0x29. Najdôležitejšie registre pre odčítanie aktuálnej hodnoty sú Control (0x01) a ALS Data (0x14 - 0x17) \cite{noauthor_tsl25911_nodate}.
 
 \section{Návrh riešenia}
-V časti návrhu uvažujeme ohľadom zapojenia hardvérových súčiastok z pohľadu napäťových úrovní aj riadiacich signálov v systéme. Spôsob čítania zo senzorov a ovládania ovlyvňujú ovládače adaptérov používané firmvérom a ich vzájomnú koordináciu. Voľba nastavení, ktoré môže používateľ zmeniť je následne potrebné zahrnúť do prototypu obrazovky mobilnej aplikácie.
+V časti návrhu uvažujeme ohľadom zapojenia hardvérových súčiastok z pohľadu napäťových úrovní aj riadiacich signálov v systéme. Spôsob čítania zo senzorov a ovládania ovlyvňujú ovládače adaptérov používané firmvérom a ich vzájomnú koordináciu. Voľbu nastavení, ktoré môže používateľ zmeniť je následne potrebné zahrnúť do prototypu obrazovky mobilnej aplikácie.
 
 \subsection{Diagramy zapojenia}
-Vnorený systém inteligentnej stolovej lampy vychádza z \textbf{blokovej schémy} na Obr. \ref{fig:block-diagram}. Zariadenie je napájané z elektrickej siete 230~V AC, ktoré napajací zdroj transformuje na 12~V DC priamo použiteľných pre LED pásik. Mikrokontrolér potrebuje napätie 3,3V~V, ale USB konektor umožňuje pripojenie priamo na 5~V DC získaných z lineárneho regulátora napätia.
+Vnorený systém inteligentnej stolovej lampy vychádza z \textbf{blokovej schémy} na Obr. \ref{fig:block-diagram}. Zariadenie je napájané z elektrickej siete 230~V AC, ktoré napajací zdroj transformuje na 12~V DC priamo použiteľných pre LED pásik. Mikrokontrolér potrebuje napätie 3,3~V, ale USB konektor umožňuje pripojenie priamo na 5~V DC získaných z lineárneho regulátora napätia.
 
 \begin{figure}[h]
 	\centering
@@ -206,7 +206,7 @@ Na schéme \ref{fig:electrical} je zakreslené zapojenie jednotlivých modulov n
 \FloatBarrier
 
 \subsection{Mobilná aplikácia}
-Stav a aktuálne vlastnosti lampy sa budú nastavovať cez rozhranie mobilnej aplikácie  určenú na platformu Android. Wireframe rozloženia tlačidiel a textových polí na vpisovanie čísel sa nachádza na Obr. \ref{fig:app-wireframe}.
+Stav a aktuálne vlastnosti lampy sa budú nastavovať cez rozhranie mobilnej aplikácie určenej na platformu Android. Wireframe rozloženia tlačidiel a textových polí na vpisovanie čísel sa nachádza na Obr.~\ref{fig:app-wireframe}.
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.28\textwidth]{assets/wireframe.png}
@@ -214,7 +214,7 @@ Stav a aktuálne vlastnosti lampy sa budú nastavovať cez rozhranie mobilnej ap
 	\label{fig:app-wireframe}
 \end{figure}
 
-Funkcionality aplikácie budú dostupné až po úspešnom naviazaní spojenia s modulom HC-05 cez Bluetooth. Pri pripojení na svietidlo si aplikácia načíta nastavenia uložené na mikrokontroléri do textových polí. Tlačidlo ,,Použiť'' umožní odošlať naraz všetky nastavenia z aplikácie. Na tlačidlách zapnutia svetla a detekcie pohybu, alebo vedľa nich, bude indikovaný aktuálne stav oznamovaný zo zariadenia pri akejkoľvek zmene.
+Funkcionality aplikácie budú dostupné až po úspešnom naviazaní spojenia s modulom HC-05 cez Bluetooth. Pri pripojení na svietidlo si aplikácia načíta nastavenia uložené na mikrokontroléri do textových polí. Tlačidlo ,,Použiť'' umožní odošlať naraz všetky nastavenia z aplikácie. Na tlačidlách zapnutia svetla a detekcie pohybu, alebo vedľa nich, bude indikovaný aktuálny stav oznamovaný zo zariadenia pri akejkoľvek zmene.
 \FloatBarrier
 
 \subsection{Spínanie svetla}
@@ -236,7 +236,7 @@ Svetlo sa môže v podstate nachádzať len v dvoch stavoch - zapnuté a vypnut�
 Pravidlá na prepnutie stavov svetla sú nasledovné (Obr.~\ref{fig:state-diagram-switch}):
 \begin{itemize}
 \item \textbf{Ak je OFF}: Okolité osvelenie musí byť pod nastavenou prahovou úrovňou: lux~$\leq$~threshold, a súčasne bol poslaný dopyt o zapnutie svetla, buď z mobilnej aplikácie alebo od pohybového senzora.
-\item \textbf{Ak je ON}: Mobilná aplikácia poslala dopyt na vypnutie svetla alebo vypršal časovač od posledného dopytu na zapnutie (ten je aktívny vždy keď spustená detekcia pohybu).
+\item \textbf{Ak je ON}: Mobilná aplikácia poslala dopyt na vypnutie svetla alebo vypršal časovač od posledného dopytu na zapnutie (ten je aktívny vždy keď je spustená detekcia pohybu).
 \end{itemize}
 Postup zapnutia svetla pri detekcii pohybu je ilustrovaný na diagrame (Obr.~\ref{fig:pir-motion-detect}).
 
@@ -276,7 +276,7 @@ Okrem rozhodnutia na pokyn zapnutia LED pásika sa želaná farebná teplota a j
 
 \textbf{Fimvér} pre zariadenie kontroléra LED pásika na ESP32 je napísaný v jazyku C za použitia SDK \textbf{ESP-IDF} (Espressif IoT Development Framework) vo verzii 5.0 \cite{noauthor_esp-idf_nodate}. Ako vývojové prostredie sme použili \emph{Visual Studio Code} a na zostavovanie a flashovanie programu slúži nástroj príkazového riadku \emph{idf.py}. 
 
-Obsluhu činností ako sú napr. príjem príkazov cez Bluetooth alebo obsluha prerušenia od detektora pohybu zabezpečujú úlohy operačného systému \emph{FreeRTOS}. Ovládače na bežné periférie ako sú: GPIO, PWM, Timer, UART, I2C, Non-volatile storage pochádzajú z SDK. Driver pre sensor osvetlenia od výrobcu pre vývojový platformu Arduino IDE je prepísaný a prispôsobený ku ESP-IDF.
+Obsluhu činností ako sú napr. príjem príkazov cez Bluetooth alebo obsluha prerušenia od detektora pohybu zabezpečujú úlohy operačného systému \emph{FreeRTOS}. Ovládače na bežné periférie ako sú: GPIO, PWM, Timer, UART, I2C, Non-volatile storage pochádzajú z SDK. Driver pre senzor osvetlenia od výrobcu pre vývojový platformu Arduino IDE je prepísaný a prispôsobený ku ESP-IDF.
 
 \begin{lstlisting}[style=cstyle,caption=Štruktúra vlastností svietidla,label={lst:light-settings}]
 typedef struct {
@@ -320,7 +320,7 @@ void app_main(void)
 }
 \end{lstlisting}
 
-\textbf{Softvér mobilnej aplikácie} je impementovaný v jazyku Kotlin vo vývojovom prostredí Android Studio v2022.1.1. Aplikácia podporuje ADK minimálne verzie 24, ale je zostavená a odtestovaná výhradne na smartfóne Motorola Moto E6 Plus s Android 9. Dizajn obrazovky je realizovaný podľa návrhu (Obr. \ref{fig:mobile-app}). Pri spustení akejkoľvek akcie sa overuje otvorené spojenie so svietidlom a pokiaľ je dočasne nedostupné dialógové okno zablokuje činnosť pre používateľa a snaží sa obnoviť Bluetooth pripojenie.
+\textbf{Softvér mobilnej aplikácie} je implementovaný v jazyku Kotlin vo vývojovom prostredí Android Studio v2022.1.1. Aplikácia podporuje ADK minimálne verzie 24, ale je zostavená a odtestovaná výhradne na smartfóne Motorola Moto E6 Plus s Android 9. Dizajn obrazovky je realizovaný podľa návrhu (Obr. \ref{fig:mobile-app}). Pri spustení akejkoľvek akcie sa overuje otvorené spojenie so svietidlom. Pokiaľ je dočasne nedostupné, dialógové okno zablokuje činnosť pre používateľa a snaží sa obnoviť Bluetooth pripojenie.
 
 \begin{figure}[h]
 \centering
@@ -343,14 +343,14 @@ Z dôvodu integrácie viacerých prvkov a konečnej použiteľnosti sme systém 
 \vspace{1em}
 
 \subsection{Test: Opakované nadväzovanie Bluetooth spojenia}
-\noindent\textbf{Vstupné podmienky:} Mobilná aplikácia ani lampa nie sú spustené. Bluetooth na smartfóne je vypnuté, ale HC-05 je už spárované. \\
+\noindent\textbf{Vstupné podmienky:} Mobilná aplikácia ani lampa nie sú spustené. Bluetooth na smartfóne je vypnutý, ale HC-05 je už spárované. \\
 \textbf{Výstupné podmienky:} Mobilná aplikácia zobrazuje nastavenia svetla. \\
 \textbf{Postup:}
 \begin{enumerate}
 \itemsep0pt
 \item Používateľ otvorí aplikáciu s názvom ,,Stolové osvetlenie'' na svojom Android smatfóne 
-\item Aplikácia sa otvorí a otvorí dialógové okno s vyžiadaním povolenia na aktivovanie Bluetooth
-\item Používateľ stlačí tlačidlo ,,Povoliť''
+\item Aplikácia sa otvorí a otvorí dialógové okno s vyžiadaním povolenia na aktivovanie Bluetooth.
+\item Používateľ stlačí tlačidlo ,,Povoliť''.
 \item Aplikácia vypíše v dialǵovom okne ,,Zapína sa rozhranie Bluetooth ...'', následne sa v smarfóne aktivuje Bluetooth
 a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu ...'' a neumožňuje zrušenie dialógového okna.
 \item Používateľ pripojí lampu do elektrickej zásuvky a prepne prepínač lampy do polohy zapnuté.
@@ -368,7 +368,7 @@ a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu 
 \begin{enumerate}
 \itemsep0pt
 \item Používateľ stačí v aplikácii prepínač na zapnutie detekcie pohybu.
-\item Aplikácia indikuje zmenou stavu stavu prepínača v aplikácii, že detekcia pohybu je zapnutá.
+\item Aplikácia indikuje zmenou stavu prepínača v aplikácii, že detekcia pohybu je zapnutá.
 \item Používateľ pohne rukou vo vzdialenosti 1 m na priamu viditeľnosť od stredu šošovky PIR senzora.
 \item Svetlo sa zapne, aj podľa tlačidla v aplikácii, aj fyzicky.
 \item Používateľ počká bez akéhokoľvek okolitého pohybu po interval nastavený vo fimvéri, predvolene 20 s.
@@ -392,7 +392,7 @@ a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu 
 \begin{enumerate}
 \itemsep0pt
 \item Používateľ stačí v aplikácii prepínač na vypnutie detekcie pohybu.
-\item Aplikácia indikuje zmenou stavu stavu prepínača v aplikácii, že detekcia pohybu je vypnutá.
+\item Aplikácia indikuje zmenou stavu prepínača v aplikácii, že detekcia pohybu je vypnutá.
 \item Používateľ stačí v aplikácii tlačidlo ,,Vypnuté''.
 \item Svetlo sa zapne, aj podľa tlačidla v aplikácii, aj fyzicky.
 \item Používateľ počká po interval nastavený vo fimvéri, predvolene min. 20 s.
@@ -464,12 +464,13 @@ a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu 
 \end{enumerate}
 
 \section{Zhodnotenie výsledkov}
-%TODO
-Podľa požiadaviek zo zadania 
+V semestrálnom projekte sme vytvorili vnorený systém postavený na vývojovej doske ESP32 Lolin D32, podľa zadania a špecifikácie požiadaviek. Zariadenie ovladá nastavenia RGB LED pásiku podľa vstupov od PIR senzora pohyba, senzora vonkajšieho osvetlenia, a príkazov z mobilnej aplikácie na platforme Android komunikujúcej cez Bluetooth RFCOMM s modulom HC-05. 
 
+Na základe analýzy dostupnej ponuky vhodných typov senzorov a LED osvetlenia sme navrhli systém na spínanie stolnej lampy, pričom sme museli vyriešiť distribúciu viacerách napajacích napätí pre prvky v systéme, pripojenie a komunikáciu so senzormi cez mikroprocesorové zbernice, a scenáre spínania svetla. Firmvér je implementovaný v jazyku C v SDK ESP-IDF. Mobilná aplikácia je napísaná v jazyku Kotlin a jej hlavnou úlohou je posielanie Bluetooh príkazov zariadeniu. 
+
+Správnosť systému ako celku sme overili sériou akceptačných testov s kladnými výsledkami pri každom z nich. Použitie RGB svetiel umožňuje rozšírenie do budúcna pre ďaľšie farebné scenérie.
 
 \printbibliography[title={Zoznam použitej literatúry}]
-\newpage
 
 \section{Technická dokumentácia}
 \subsection{Prehľad hardvérových súčiastok}
@@ -533,14 +534,43 @@ Firmvér je rozdelený do viacerých súborov zdrojového kódu obsahujúce pop�
 \end{itemize}
 
 \subsection{Zdrojové súbory pre Android aplikáciu}
-%TODO
+Zdrojový kód mobilnej aplikácie a nastavenia vývojového prostredia sa nachádzajú v priečinku \emph{led-light-app}, s rozmiestnením súborov podľa predvolenej štruktúry z Android Studio. Hlavná aktivita sa nachádza v súbore \emph{MainActivity.kt} vnúri \emph{app/src/main/java/com/smartdevice/tablelantern/}. Rozmiestnuje UI prvky na obrazovke,
+iniciuje a prijíma správy od Bluetooth služby v \emph{BluetoothService.kt}.
+
+V triedach prítomných v aplikácii sa nachádzajú tieto najdôležitejšie metódy:
+\paragraph{class MainActivity}
+\begin{itemize}
+\itemsep0pt
+\item \verb|onCreate()| - vytvorenie UI komponentov a inicializácia Bluetooth služby (\emph{BluetoothService}).
+\item \verb|onSwitchLight()| - Udalosť tlačidla na odoslanie príkazu cez Bluetooth na zmenenie stavu svetla. 
+\item \verb|onMotionDetectSwitch()| -  Udalosť tlačidla na odoslanie príkazu cez Bluetooth na (de)aktiváciu detektora pohybu.
+\item \verb|onApplySettings()| - Udalosť tlačidla na odoslanie želaných nastavení svetla s ich validáciou.
+\item \verb|lampConnect()| - Nájdenie modulu HC-05 medzi spárovanými zariadeniami a otvorenie Bluetooth spojenia, na ten účel volá metódu \verb|BluetoothService.connect()|
+\item \verb|setLightState()| - Spätné volanie (callback) po prijatí konfigurácie od vnoreného systému na jej parsovanie a načítanie do textových polí v aplikácii.
+\item \verb|BlHandler.handleMessage()| - Zobrazovanie správ z Bluetooth služby v UI rozhraní.
+\end{itemize}
+
+\paragraph{class BluetoothService}
+\begin{itemize}
+\itemsep0pt
+\item \verb|connect()| - Spúšta vlákno \emph{ConnectThread}. Služi ako rozhranie pre \emph{MainActivity} na prístup k vnútorným triedam vlákien.
+\item \verb|connected()| - Spúšta vlákno \emph{ConnectThread}. Služi ako rozhranie pre \emph{MainActivity} na prístup k vnútorným triedam vlákien.
+\item \verb|send()| - Služí ako rozhranie voči \emph{MainActivity} a volá \emph{ConnectedThread.write()} so argumentami v správnom fomáte.
+\item \verb|ConnectThread.run()| - Hlavná metóda vlákna \emph{ConnectThread} na nadviazanie Bluetooth spojenia cez RFCOMM socket. Volá metódu \emph{connected}. 
+\item \verb|ConnectedThread.run()|  - Hlavná metóda vlákna \emph{ConnectedThread} čaká na príjem bajtov z otvoreného Bluetooth socket. Po prijatí celistvej správy stavu vnoreného systému notifikuje hlavnú aktivitu.
+\item \verb|ConnectedThread.write()| - Metóda na odoslanie bajtov na zariadenie cez otvorený Bluetooth socket.
+\end{itemize}
+
 
 \subsection{Syntax Bluetooth príkazov}
-
-%TODO
-% Formát správ {S/%d,M/%d,K/%d,B/%d,L/%d}
-% REQ, SWITCH, DETECT,LUX, KELVIN, LEVEL
-
-% Nahratie softvéru Android
+Zariadenie lampy komunikuje cez Bluetooth RFCOMM prostredníctvom preddefinovanej sady textových príkazov. Príkazy posielané hneď za sebou musia byť oddelené ľudovoľným oddelovačom napr. medzerou alebo čiarkou. Po poslaní aktívovaní konfiguračného príkazu sa ako odpoveď vráti aktuálny stav svetla vo formáte podľa príkazu \emph{REQ}.
+\begin{itemize}
+\item \textbf{SWITCH} - Prepnutie aktuálneho stavu svetla. Ak je zapnuté, tak sa vypne a naopak.
+\item \textbf{DETECT} - Prepnutie aktualnej aktívnosti detektora pohybu.
+\item \textbf{LEVEL [level]} - Jas svetla v percentách z celkovej svietivosti. Validná hodnota pre parameter \emph{level} je celé číslo v rozsahu 0 - 100 vrátane.
+\item \textbf{KELVIN [temp]} - Farebná teplota svetla v kelvinoch. Validná hodnota pre parameter \emph{temp} je celé číslo v rozsahu 1000 - 40000 vrátane.
+\item \textbf{LUX [threshold]} - Prahová úroveň vonkajšieho osvetlenia v luxoch, pod ktorú sa svetlo rozsvieti. Validná hodnota pre parameter \emph{threshold} je celé číslo v rozsahu 0 - 10000 vrátane. Nepredpokoladá sa zapínanie svetla pri vysokej úrovni vonkajšieho osvetlenia.
+\item \textbf{REQ} - Aktuálny stav svetla vo formáte: \emph{,,{S/0,M/0,K/2000,B/100,L/5}''}. Písmená označujú príslušné parametre takto: \textbf{S} - stav svetla (0 alebo 1), \textbf{M} - aktívnosť detektora pohybu  (0 alebo 1), \textbf{K} - farebná teplota, B - jas,  L - prahová úroveň osvetlenia. Rozsah hodnôt je rovnaký ako pri konfiguračných príkazov.
+\end{itemize}
 
 \end{document}
