@@ -348,11 +348,10 @@ Z dôvodu integrácie viacerých prvkov a konečnej použiteľnosti sme systém 
 \textbf{Postup:}
 \begin{enumerate}
 \itemsep0pt
-\item Používateľ otvorí aplikáciu s názvom ,,Stolové osvetlenie'' na svojom Android smatfóne 
-\item Aplikácia sa otvorí a otvorí dialógové okno s vyžiadaním povolenia na aktivovanie Bluetooth.
+\item Používateľ otvorí aplikáciu s názvom ,,Stolové osvetlenie'' na svojom Android smartfóne 
+\item Aplikácia sa otvorí a zobrazí sa dialógové okno s vyžiadaním povolenia na aktivovanie Bluetooth.
 \item Používateľ stlačí tlačidlo ,,Povoliť''.
-\item Aplikácia vypíše v dialǵovom okne ,,Zapína sa rozhranie Bluetooth ...'', následne sa v smarfóne aktivuje Bluetooth
-a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu ...'' a neumožňuje zrušenie dialógového okna.
+\item Aplikácia vypíše v dialǵovom okne ,,Zapína sa rozhranie Bluetooth ...'', následne sa v smartfóne aktivuje Bluetooth. Aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu ...'' a neumožňuje zrušenie tohto dialógového okna.
 \item Používateľ pripojí lampu do elektrickej zásuvky a prepne prepínač lampy do polohy zapnuté.
 \item Aplikácia maximálne do 15 sekúnd zatvorí dialógové okno a placeholders (vyšedené písmo) v textových poliach zmení za skutočné hodnoty (nevyšedené písmo).
 \item Používateľ prepne prepínač lampy do polohy vypnuté a v mobilnej aplikácii klikne na ľubovoľné tlačidlo.
@@ -371,7 +370,7 @@ a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu 
 \item Aplikácia indikuje zmenou stavu prepínača v aplikácii, že detekcia pohybu je zapnutá.
 \item Používateľ pohne rukou vo vzdialenosti 1 m na priamu viditeľnosť od stredu šošovky PIR senzora.
 \item Svetlo sa zapne, aj podľa tlačidla v aplikácii, aj fyzicky.
-\item Používateľ počká bez akéhokoľvek okolitého pohybu po interval nastavený vo fimvéri, predvolene 20 s.
+\item Používateľ počká bez akéhokoľvek okolitého pohybu po interval nastavený vo firmvéri, predvolene 20 s.
 \item Svetlo sa po 20 s samočinne vypne, aj podľa tlačidla v aplikácii, aj fyzicky.
 \end{enumerate}
 
@@ -466,15 +465,15 @@ a aplikácia vypíše v dialógovom okne ,,Počkajte na pripojenie ku svietidlu 
 \section{Zhodnotenie výsledkov}
 V semestrálnom projekte sme vytvorili vnorený systém postavený na vývojovej doske ESP32 Lolin D32, podľa zadania a špecifikácie požiadaviek. Zariadenie ovladá nastavenia RGB LED pásiku podľa vstupov od PIR senzora pohyba, senzora vonkajšieho osvetlenia, a príkazov z mobilnej aplikácie na platforme Android komunikujúcej cez Bluetooth RFCOMM s modulom HC-05. 
 
-Na základe analýzy dostupnej ponuky vhodných typov senzorov a LED osvetlenia sme navrhli systém na spínanie stolnej lampy, pričom sme museli vyriešiť distribúciu viacerách napajacích napätí pre prvky v systéme, pripojenie a komunikáciu so senzormi cez mikroprocesorové zbernice, a scenáre spínania svetla. Firmvér je implementovaný v jazyku C v SDK ESP-IDF. Mobilná aplikácia je napísaná v jazyku Kotlin a jej hlavnou úlohou je posielanie Bluetooh príkazov zariadeniu. 
+Na základe analýzy dostupnej ponuky vhodných typov senzorov a LED osvetlenia sme navrhli systém na spínanie stolnej lampy, pričom sme museli vyriešiť distribúciu viacerých napajacích napätí pre prvky v systéme, pripojenie a komunikáciu so senzormi cez mikroprocesorové zbernice, a scenáre spínania svetla. Firmvér je implementovaný v jazyku C v SDK ESP-IDF. Mobilná aplikácia je napísaná v jazyku Kotlin a jej hlavnou úlohou je posielanie Bluetooh príkazov zariadeniu. 
 
-Správnosť systému ako celku sme overili sériou akceptačných testov s kladnými výsledkami pri každom z nich. Použitie RGB svetiel umožňuje rozšírenie do budúcna pre ďaľšie farebné scenérie.
+Správnosť systému ako celku sme overili sériou akceptačných testov s kladnými výsledkami pri každom z nich. Použitie RGB svetiel umožňuje rozšírenie do budúcna pre ďaľšie farebné scény.
 
 \printbibliography[title={Zoznam použitej literatúry}]
 
 \section{Technická dokumentácia}
 \subsection{Prehľad hardvérových súčiastok}
-Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre zhotovenie zariadenia. Cena hardvéru prototypu (jednokusová výroba) je odhadovaná na 55 \texteuro na základe nami zvolených dodávateľov.
+Na základe predošlej analýzy sme zostavili zoznam súčiastok potrebných pre zhotovenie zariadenia. Cena hardvéru prototypu (jednokusová výroba) je odhadovaná na 55 \texteuro, na základe nami zvolených dodávateľov.
 
 \paragraph{Riadiaca jednotka}
 \begin{itemize}
