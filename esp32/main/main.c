@@ -23,7 +23,7 @@ void lamp_scene(uint16_t lux)
 {
     if (light.status && lux <= light.threshold) {
         // Confirm request status in case of change by Bluetooth, but low lighting
-        light.status = true;  
+        light.status = true;
         if (light.movement) {
             gptimer_set_raw_count(timer, 0);
             gptimer_start(timer);
@@ -45,6 +45,7 @@ uint16_t illuminance_level(void)
         lx = light_sensor_read_lux();
         xSemaphoreGive(lux_sensor_mutex);
     }
+    printf("LUX: %u\n", lx);
     return lx;
 }
 
@@ -69,7 +70,6 @@ void receive_commands_task(void* arg)
 {
     char *stream = malloc(BL_BUF_SIZE);
     CommandAction cmd = BLCMD_NO_ACTION;
-    bool movement = true;
 
     while (1) {
         int length = uart_read_bytes(UART_PORT_NUM, stream, BL_BUF_SIZE - 1, 100 / portTICK_PERIOD_MS);
@@ -101,11 +101,12 @@ void receive_commands_task(void* arg)
                 break;
 
             case BLCMD_DETECTION:
-                movement_detection(movement, timer, timer_on_alarm, switch_isr_handler);
+                movement_detection(light.movement, timer, timer_on_alarm, switch_isr_handler);
                 if (light.status && light.movement) {
                     gptimer_set_raw_count(timer, 0);
                     gptimer_start(timer);
                 }
+                bluetooth_send_status(stream, &light);
                 break;
 
             default:

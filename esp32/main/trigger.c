@@ -41,24 +41,23 @@ void timer_setup(gptimer_handle_t *gptimer, uint64_t seconds, gptimer_alarm_cb_t
     gptimer_set_alarm_action(*gptimer, &timer_alarm);
 
     gptimer_event_callbacks_t cbs = {
-        .on_alarm = action, 
+        .on_alarm = action,
     };
     gptimer_register_event_callbacks(*gptimer, &cbs, NULL);
-    
+
     gptimer_enable(*gptimer);
 }
 
 
 void movement_detection(
-    bool allow, gptimer_handle_t timer, 
+    bool allow, gptimer_handle_t timer,
     gptimer_alarm_cb_t timer_action, gpio_isr_t gpio_action
-) 
+)
 {
-    gptimer_disable(timer);
     if (allow) {
         pir_add_isr(gpio_action);
         gptimer_event_callbacks_t cbs = {
-            .on_alarm = timer_action, 
+            .on_alarm = timer_action,
         };
         gptimer_register_event_callbacks(timer, &cbs, NULL);
         gptimer_enable(timer);
